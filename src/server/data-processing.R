@@ -1,8 +1,11 @@
 
-
-# Return: List of the expense and funding data from the excel file
-read_excel_data <- function(file_path)
-{
+read_excel_data <- function(file_path) {
+  # Read the excel file uploaded that contains funding and expense data
+  #
+  # Arguments:
+  # file_path: path to the uploaded excel file
+  #
+  # Return: List of the expense and funding dataframes
   funding_sources_df <- read_excel(file_path, sheet = "Funding") %>%
     process_funding_data()
 
@@ -11,11 +14,10 @@ read_excel_data <- function(file_path)
 
   return(list(funding_sources = funding_sources_df, expense = expense_df))
 }
-# Handles data processing
-
 
 process_funding_data <- function(df) {
   # Read the dataframe, select and rename columns for the funding data
+  # Arguments:
   # df: data frame read from the excel sheet
   # Returns:
   # funding_sources_df: processed funding sources data frame
@@ -39,6 +41,12 @@ process_funding_data <- function(df) {
     rowwise() %>%
     mutate(allowed_categories = list(allowed_categories)) %>%
     unnest(allowed_categories) %>%
+
+    # Add index
+    mutate(index = row_number()) %>%
+    select(index, everything()) %>%
+    ungroup() %>% # Ungroup after rowwise operation
+    
 
     # Remove rows with NA in source_id
     filter(!is.na(source_id))
@@ -64,6 +72,11 @@ process_expense_data <- function(df) {
       planned_amount = as.numeric(planned_amount),
       item_id = as.character(item_id)
     )
+
+    # Add index
+    mutate(index = row_number()) %>%
+    select(index, everything()) %>%
+    ungroup() %>% # Ungroup after rowwise operation
 
   return(expense_df)
 }
