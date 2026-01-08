@@ -19,7 +19,7 @@ expense_ui <- function() {
         ),
         
         div(
-          actionButton("add_expense", "Add Expense", class = "add_expense_btn")
+          actionButton("add_expense", "+ Add Expense", class = "add_data_btn")
         )
         
       ),
@@ -28,11 +28,13 @@ expense_ui <- function() {
         div(
           p("this is expense table")
         ),
-        
+        full_screen = TRUE,
         class = "info-containers"
       )
       
-    )
+    ),
+    
+    actionButton("initial_download", "↓ Download Excel file", class = "initial-excel-download")
     
   )
   

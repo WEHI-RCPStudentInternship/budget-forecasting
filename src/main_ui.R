@@ -15,7 +15,8 @@ main_ui_layout <- function() {
   
   # Custom theme Bootstrap
   custom_theme <- bs_theme(
-    version = 5
+    version = 5,
+    base_font = font_google("Inter")
   )
   
   main_platform <- page_sidebar(
@@ -25,7 +26,7 @@ main_ui_layout <- function() {
                width = "auto",
                style = "margin: 25px;"),
       "Forecasting Budget Tool",
-      style = "font-size: 25px;"
+      style = "font-size: 25px; font-weight: 600; color: #575756;"
     ),
     
     useShinyjs(),
@@ -110,6 +111,25 @@ main_ui_layout <- function() {
           display: block;
         }
         
+        .exit-session-popup .modal-header {
+          justify-content: center;
+          position: relative;
+          padding: 20px 20px 0 20px;
+        }
+        
+        .exit-session-popup .modal-title {
+          font-weight: bold;
+        }
+        
+        .exit-session-popup .modal-body {
+          padding: 20px;
+          text-align: center;
+        }
+        
+        .exit-session-popup .modal-footer {
+          padding-top: 0;
+          justify-content: center;
+        }
         
         /* FORECAST PAGE */
         
@@ -202,6 +222,21 @@ main_ui_layout <- function() {
           justify-content: space-between;
           align-items: center;
           width: 100%;
+        }
+        
+        .add_data_btn {
+          border: none;
+          border-radius: 15px;
+          background-color: #CACACA;
+
+        }
+        
+        .initial-excel-download {
+          border: none;
+          border-radius: 15px;
+          background-color: #D1FFE4;
+          color: black;
+          float: right;
         }
 
                       

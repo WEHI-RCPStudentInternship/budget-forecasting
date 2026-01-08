@@ -19,7 +19,7 @@ funding_ui <- function() {
         ),
         
         div(
-          actionButton("add_funding", "Add Funding", class = "add_funding_btn")
+          actionButton("add_funding", "+ Add Funding", class = "add_data_btn")
         )
         
       ),
@@ -28,7 +28,7 @@ funding_ui <- function() {
         div(
           p("this is funding table")
         ),
-        
+        full_screen = TRUE,
         class = "info-containers"
       )
       

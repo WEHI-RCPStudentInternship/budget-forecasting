@@ -74,16 +74,16 @@ dashboard_ui <- function() {
         card(
           card_header(
             "This is budget table"
-          )
+          ),
+          full_screen = TRUE
         ),
         
-        actionButton("budget_download", "Download Budget Allocation",
+        actionButton("budget_download", "↓ Download Budget Allocation",
                      class = "budget_download_btn")
       )
 
     ),
     
-
     actionButton("exit_session", "Exit Session", class = "exit_session_btn"),
 
       

@@ -13,7 +13,7 @@ main_server_logic <- function(input, output, session, values) {
   
   
   # Current page
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("dashboard")
   
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -32,6 +32,23 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   output$empty_table <- renderDT({})
+  
+  observeEvent(input$exit_session, {
+    showModal(
+      tagAppendAttributes(
+        modalDialog(
+          title = "Exiting Session",
+          "All data from this session will be deleted",
+          easyClose = TRUE,
+          footer = tagList(
+            actionButton("return_to_session", "Return"),
+            actionButton("end_session", "Exit Session")
+          )
+        ),
+        class = "exit-session-popup"
+      )
+    )
+  })
   
   
 }
