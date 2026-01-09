@@ -70,7 +70,13 @@ forecast_ui <- function() {
               style = "margin-left: 10px; margin-top: 5px;"
             ),
             
-            DTOutput("empty_table")
+            div(
+              "No available data.",
+              style = "margin: 30px 20px;
+                      text-align: center;
+                      font-size: 15px;
+                      font-weight: normal;"
+              )
             
           )
           

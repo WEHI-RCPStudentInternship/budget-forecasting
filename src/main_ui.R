@@ -28,7 +28,7 @@ main_ui_layout <- function() {
       "Forecasting Budget Tool",
       style = "font-size: 25px; font-weight: 600; color: #575756;"
     ),
-    
+    theme = custom_theme,
     useShinyjs(),
     
     sidebar = sidebar(
@@ -129,6 +129,12 @@ main_ui_layout <- function() {
         .exit-session-popup .modal-footer {
           padding-top: 0;
           justify-content: center;
+        }
+        
+        .session-btn {
+          border: none;
+          border-radius: 15px;
+          background-color: #FFDCDC;
         }
         
         /* FORECAST PAGE */
@@ -239,6 +245,61 @@ main_ui_layout <- function() {
           float: right;
         }
 
+        .add-funding-popup .modal-header {
+          padding: 20px 25px 0 25px;
+        }
+        
+        .add-funding-popup .modal-title {
+          font-weight: bold;
+        }
+        
+        .add-funding-popup .modal-body {
+          padding: 25px;
+        }
+        
+        #date-container {
+          display: flex;
+          gap: 20px;
+        }
+        
+        .date-valid {
+          flex: 1;
+          min-width: 0;
+        }
+        
+        .add-funding-popup .modal-footer {
+          padding-top: 0;
+          justify-content: center;
+        }
+        
+        .add-funding-popup .modal-body {
+          padding-bottom: 20px;
+        }
+        
+        .add-funding-confirm {
+          width: 100%;
+          background-color: black;
+          color: white;
+          border: none;
+          border-radius: 15px;
+        }
+        
+        .data-input-headers {
+          margin-bottom: 10px;
+          font-weight: bold;
+        }
+        
+        #funding-form .form-control {
+          border: none;
+          border-radius: 10px;
+          background-color: #E5E4E4;
+        }
+        
+        #funding-source .shiny-input-container,
+        #funding-amount .shiny-input-container,
+        #funding-note .shiny-input-container {
+          width: 100%;
+        }
                       
       "))
     )

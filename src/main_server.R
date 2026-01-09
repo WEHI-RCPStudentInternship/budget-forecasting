@@ -13,7 +13,7 @@ main_server_logic <- function(input, output, session, values) {
   
   
   # Current page
-  current_view <- reactiveVal("dashboard")
+  current_view <- reactiveVal("funding")
   
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -30,9 +30,8 @@ main_server_logic <- function(input, output, session, values) {
            "expense" = expense_ui()
     )
   })
-  
-  output$empty_table <- renderDT({})
-  
+
+  # Exiting Session pop-up
   observeEvent(input$exit_session, {
     showModal(
       tagAppendAttributes(
@@ -41,8 +40,8 @@ main_server_logic <- function(input, output, session, values) {
           "All data from this session will be deleted",
           easyClose = TRUE,
           footer = tagList(
-            actionButton("return_to_session", "Return"),
-            actionButton("end_session", "Exit Session")
+            actionButton("return_to_session", "Return", class = "session-btn"),
+            actionButton("end_session", "Exit Session", class = "session-btn")
           )
         ),
         class = "exit-session-popup"
@@ -51,5 +50,47 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   
+  # Event: Adding New Funding
+  observeEvent(input$add_funding, {
+    showModal(upload_funding_modal())
+    
+    updateDateInput(
+      session,
+      "valid_from_date",
+      value = NULL
+    )
+  })
+  
+
+  # Event: Adding New Expense
+  
+  observeEvent(input$add_expense, {
+    showModal(
+      tagAppendAttributes(
+        modalDialog(
+          title = "Add New Expense",
+          body = add_expense_modal(),
+          easyClose = TRUE,
+          footer = actionButton("add_expense_confirm", "Add Expense", class = "add-expense-confirm")
+        ),
+        class = "add-expense-popup"
+      )
+    )
+  })
+  
+  
+  
+  # Sample output
+  output$sample_funding_table <- renderDataTable({datatable(penguins)})
+  
+  output$sample_expense_table <- renderDataTable({datatable(penguins)})
+  
 }
+
+
+
+
+
+
+
 

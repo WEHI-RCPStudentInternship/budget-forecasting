@@ -5,7 +5,7 @@ source("requirements/packages.R")
 
 # 1. Installing packages
 
-shiny::devmode(TRUE)
+options(shiny.autoreload = TRUE)
 run_setup()
 
 
@@ -22,6 +22,8 @@ library(rmarkdown)
 library(shinyjs)
 library(tinytex)
 library(RColorBrewer)
+library(palmerpenguins)
+library(shinyWidgets)
 
 
 # 3. Load UI

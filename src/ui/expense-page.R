@@ -26,10 +26,11 @@ expense_ui <- function() {
       
       card(
         div(
-          p("this is expense table")
+          dataTableOutput("sample_expense_table")
         ),
         full_screen = TRUE,
-        class = "info-containers"
+        class = "info-containers",
+        style = "padding: 16px;"
       )
       
     ),
@@ -39,3 +40,19 @@ expense_ui <- function() {
   )
   
 }
+
+
+add_expense_modal <- function() {
+  
+  div(
+    div("this is free"),
+  
+    div("this is expense")
+  )
+}
+
+
+
+
+
+
