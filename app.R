@@ -33,7 +33,22 @@ ui <- main_ui_layout()
 server <- function(input, output, session) {
   
   # Memory (to be filled)
-  values <- reactiveValues(NULL)
+  values <- reactiveValues(
+    funding_sources = data.frame(
+      source_id = character(),
+      allowed_categories = list(),
+      valid_from = as.Date(character()),
+      valid_to = as.Date(character()),
+      amount = numeric()
+    ),
+    expense = data.frame(
+      item_id = character(),
+      expense_category = character(),
+      planned_amount = numeric(),
+      latest_payment_date = as.Date(character())
+    ),
+    allocation_result = data.frame()
+  )
   
   main_server_logic(input, output, session, values)
   main_output()
