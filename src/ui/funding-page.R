@@ -26,7 +26,7 @@ funding_ui <- function() {
       
       card(
         div(
-          dataTableOutput("sample_funding_table")
+          DTOutput("sample_funding_table")
         ),
         full_screen = TRUE,
         class = "info-containers",
@@ -153,7 +153,6 @@ upload_funding_modal <- function() {
     ),
     class = "add-funding-popup"
   )
-
   
   
 }

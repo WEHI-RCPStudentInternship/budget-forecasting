@@ -258,16 +258,9 @@ main_ui_layout <- function() {
           float: right;
         }
 
-        .add-funding-popup .modal-header {
+        .add-funding-popup .modal-header,
+        .add-expense-popup .modal-header {
           padding: 20px 25px 0 25px;
-        }
-        
-        .add-funding-popup .modal-title {
-          font-weight: bold;
-        }
-        
-        .add-funding-popup .modal-body {
-          padding: 25px;
         }
         
         #date-container {
@@ -289,22 +282,23 @@ main_ui_layout <- function() {
           font-size: 13px;
         }
         
-        .add-funding-popup .modal-footer {
+        .modal-footer {
           padding: 0 20px 20px 20px;
           justify-content: center;
         }
         
-        .add-funding-popup .modal-body {
-          padding-bottom: 20px;
+        .add-funding-popup .modal-body,
+        .add-expense-popup .modal-body {
+          padding: 25px 25px 20px 25px;
         }
         
-        .add-funding-confirm {
+        .add-funding-confirm,
+        .add-expense-confirm {
           width: 100%;
           background-color: black;
           color: white;
           border: none;
           border-radius: 15px;
-          margin
         }
         
         .data-input-headers {
@@ -313,18 +307,23 @@ main_ui_layout <- function() {
         }
         
         #funding-form .form-control,
-        #funding-allowed-categories .selectize-input {
+        #expense-form .form-control,
+        #funding-allowed-categories .selectize-input,
+        #expense-categories .selectize-input {
           border: none;
           border-radius: 10px;
           background-color: #E5E4E4;
         }
         
         .elongated-input .shiny-input-container,
-        #funding-allowed-categories .shiny-input-container {
+        #funding-allowed-categories .shiny-input-container,
+        #expense-categories .shiny-input-container,
+        #latest-payment-date .shiny-input-container {
           width: 100%;
         }
         
-        #funding-allowed-categories .selectize-input {
+        #funding-allowed-categories .selectize-input,
+        #expense-categories .selectize-input {
           padding: 6px 12px;
         }
         

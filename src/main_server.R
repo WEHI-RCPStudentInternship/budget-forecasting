@@ -13,7 +13,7 @@ main_server_logic <- function(input, output, session, values) {
   
   
   # Current page
-  current_view <- reactiveVal("expense")
+  current_view <- reactiveVal("dashboard")
   
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -30,7 +30,8 @@ main_server_logic <- function(input, output, session, values) {
            "expense" = expense_ui()
     )
   })
-
+  
+  
   # Exiting Session pop-up
   observeEvent(input$exit_session, {
     showModal(
@@ -49,6 +50,17 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
   
+  # Render priority mode
+  output$priority_card <- renderUI({
+    
+    if (input$select_priority == "Manual Priority") {
+      manual_priority_ui()
+    } else {
+      column_priority_ui()
+    }
+    
+  })
+  
   
   # Event: Adding New Funding
   observeEvent(input$add_funding, {
@@ -64,10 +76,14 @@ main_server_logic <- function(input, output, session, values) {
   
   
   
-  # Sample output
-  output$sample_funding_table <- renderDataTable({datatable(penguins)})
+  # Sample table outputs (for viewings only)
+  output$sample_budget_table <- renderDT({datatable(penguins)})
   
-  output$sample_expense_table <- renderDataTable({datatable(penguins)})
+  output$sample_funding_table <- renderDT({datatable(penguins)})
+  
+  output$sample_expense_table <- renderDT({datatable(penguins)})
+  
+  output$sample_manual_table <- renderDT({datatable(penguins)})
   
 }
 

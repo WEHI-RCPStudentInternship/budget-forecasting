@@ -12,17 +12,14 @@ forecast_ui <- function() {
       "Forecast",
       class = "content-title",
       
-      
       div(
         class = "info-containers",
-        
         
         # Upload Spreadsheet Card
         
         card(
           div(
             p("Upload the Excel file", class = "card-title"),
-            
             
             div(
               id = "upload-container",
@@ -45,8 +42,6 @@ forecast_ui <- function() {
                                  class = "template-download-btn")
               )
             )
-            
-    
           )
         ),
         
@@ -56,6 +51,7 @@ forecast_ui <- function() {
         
         card(
           id = "set_priority_card",
+          full_screen = TRUE,
           
           div(
             p("Set Priority", class = "card-title"),
@@ -64,24 +60,15 @@ forecast_ui <- function() {
               selectInput(
                 "select_priority",
                 label = NULL,
-                choices = list("Manual Priority", "Column Priority"),
-                selectize = TRUE,
+                choices = c("Manual Priority", "Column Priority")
               ),
               style = "margin-left: 10px; margin-top: 5px;"
             ),
             
-            div(
-              "No available data.",
-              style = "margin: 30px 20px;
-                      text-align: center;
-                      font-size: 15px;
-                      font-weight: normal;"
-              )
+            uiOutput("priority_card")
             
           )
-          
         )
-        
       ),
       
       actionButton("generate_forecast", "Generate Forecast", class = "generate_forecast_btn")
@@ -95,12 +82,26 @@ forecast_ui <- function() {
 
 manual_priority_ui <- function() {
   
+  div(
+    DTOutput("sample_manual_table"),
+    style = "padding: 16px; font-weight: 400; font-size: 16px;"
+  )
 }
 
 
 column_priority_ui <- function() {
   
+  div("TBC...")
+  
+  
+  
 }
+
+
+
+
+
+
 
 
 

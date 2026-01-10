@@ -4,6 +4,8 @@
 
 expense_ui <- function() {
   
+  # note: content-title messing with bold text!
+  
   div(
     class = "result-container",
     
@@ -26,7 +28,7 @@ expense_ui <- function() {
       
       card(
         div(
-          dataTableOutput("sample_expense_table")
+          DTOutput("sample_expense_table")
         ),
         full_screen = TRUE,
         class = "info-containers",
@@ -93,6 +95,7 @@ upload_expense_modal <- function() {
         
         # Latest Payment Date
         div(
+          id = "latest-payment-date",
           class = "date-valid",
           div("Latest Payment Date", class = "data-input-headers"),
           airDatepickerInput(

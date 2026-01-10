@@ -73,7 +73,7 @@ dashboard_ui <- function() {
         
         card(
           div(
-            dataTableOutput("sample_expense_table")
+            DTOutput("sample_budget_table")
           ),
           full_screen = TRUE,
           style = "padding: 16px; font-weight: 400; font-size: 16px;"
