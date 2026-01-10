@@ -42,13 +42,88 @@ expense_ui <- function() {
 }
 
 
-add_expense_modal <- function() {
+upload_expense_modal <- function() {
   
-  div(
-    div("this is free"),
-  
-    div("this is expense")
+  tagAppendAttributes(
+    modalDialog(
+      title = div(
+        "Add New Expense",
+        div("Add new expense manually", class = "modal-subtitle")
+      ),
+      easyClose = TRUE,
+      footer = actionButton("add_expense_confirm", "Add Expense", class = "add-expense-confirm"),
+    
+      div(
+        id = "expense-form",
+        
+        # Expense Categories
+        div(
+          id = "expense-categories",
+          
+          div("Expense Categories", class = "data-input-headers"),
+          
+          div(
+            selectizeInput(
+              "expense_type",
+              label = NULL,
+              choices = list("Salary", "Travel"),
+              multiple = FALSE,
+              options = list(
+                placeholder = "Select expense type...",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            )
+          )
+        ),
+        
+        # Amount
+        div(
+          id = "expense-amount",
+          class = "elongated-input",
+          
+          div("Amount", class = "data-input-headers"),
+          
+          textInput(
+            "expense_amount",
+            label = NULL,
+            placeholder = "Enter expense amount..."
+          )
+        ),
+        
+        
+        # Latest Payment Date
+        div(
+          class = "date-valid",
+          div("Latest Payment Date", class = "data-input-headers"),
+          airDatepickerInput(
+            inputId = "latest_payment_date",
+            label = NULL,
+            placeholder = "Select latest payment date...",
+            autoClose = TRUE,
+            addon = "none"
+          )
+        ),
+        
+        # Note
+        div(
+          id = "expense-note",
+          class = "elongated-input",
+          
+          div("Note", class = "data-input-headers"),
+          
+          textInput(
+            "expense_note",
+            label = NULL,
+            placeholder = "Enter note... (optional)"
+          )
+        )
+        
+      )
+    ),
+    class = "add-expense-popup"
   )
+  
+  
 }
 
 

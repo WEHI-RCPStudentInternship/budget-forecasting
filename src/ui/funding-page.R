@@ -44,7 +44,10 @@ upload_funding_modal <- function() {
   
   tagAppendAttributes(
     modalDialog(
-      title = "Add New Funding",
+      title = div(
+        "Add New Funding",
+        div("Add new funding manually", class = "modal-subtitle")
+      ),
       easyClose = TRUE,
       footer = actionButton("add_funding_confirm", "Add Funding", class = "add-funding-confirm"),
       
@@ -54,6 +57,8 @@ upload_funding_modal <- function() {
         # Funding Source Name
         div(
           id = "funding-source",
+          class = "elongated-input",
+          
           
           div("Source Name", class = "data-input-headers"),
 
@@ -118,6 +123,7 @@ upload_funding_modal <- function() {
         # Amount
         div(
           id = "funding-amount",
+          class = "elongated-input",
           
           div("Amount", class = "data-input-headers"),
           
@@ -132,6 +138,7 @@ upload_funding_modal <- function() {
         # Note
         div(
           id = "funding-note",
+          class = "elongated-input",
           
           div("Note", class = "data-input-headers"),
           

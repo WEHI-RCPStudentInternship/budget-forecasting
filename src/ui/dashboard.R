@@ -72,10 +72,11 @@ dashboard_ui <- function() {
         class = "info-containers",
         
         card(
-          card_header(
-            "This is budget table"
+          div(
+            dataTableOutput("sample_expense_table")
           ),
-          full_screen = TRUE
+          full_screen = TRUE,
+          style = "padding: 16px; font-weight: 400; font-size: 16px;"
         ),
         
         actionButton("budget_download", "↓ Download Budget Allocation",

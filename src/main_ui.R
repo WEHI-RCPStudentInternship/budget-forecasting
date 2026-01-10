@@ -16,7 +16,10 @@ main_ui_layout <- function() {
   # Custom theme Bootstrap
   custom_theme <- bs_theme(
     version = 5,
-    base_font = font_google("Inter")
+    base_font = font_google(
+      "Inter",
+      wght = c(400, 500, 600, 700, 800, 900)
+      )
   )
   
   main_platform <- page_sidebar(
@@ -137,6 +140,12 @@ main_ui_layout <- function() {
           background-color: #FFDCDC;
         }
         
+        
+        
+        
+        
+        
+        
         /* FORECAST PAGE */
         
         .card-title {
@@ -221,6 +230,10 @@ main_ui_layout <- function() {
           border-radius: 15px;
         }
         
+        
+        
+        
+        
         /* FUNDING AND EXPENSE PAGES */
         
         .input-title-container {
@@ -267,8 +280,17 @@ main_ui_layout <- function() {
           min-width: 0;
         }
         
+        .modal-title {
+          font-weight: 700 !important;
+        }
+        
+        .modal-subtitle {
+          font-weight: normal;
+          font-size: 13px;
+        }
+        
         .add-funding-popup .modal-footer {
-          padding-top: 0;
+          padding: 0 20px 20px 20px;
           justify-content: center;
         }
         
@@ -282,6 +304,7 @@ main_ui_layout <- function() {
           color: white;
           border: none;
           border-radius: 15px;
+          margin
         }
         
         .data-input-headers {
@@ -289,17 +312,22 @@ main_ui_layout <- function() {
           font-weight: bold;
         }
         
-        #funding-form .form-control {
+        #funding-form .form-control,
+        #funding-allowed-categories .selectize-input {
           border: none;
           border-radius: 10px;
           background-color: #E5E4E4;
         }
         
-        #funding-source .shiny-input-container,
-        #funding-amount .shiny-input-container,
-        #funding-note .shiny-input-container {
+        .elongated-input .shiny-input-container,
+        #funding-allowed-categories .shiny-input-container {
           width: 100%;
         }
+        
+        #funding-allowed-categories .selectize-input {
+          padding: 6px 12px;
+        }
+        
                       
       "))
     )

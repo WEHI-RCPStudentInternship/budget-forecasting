@@ -13,7 +13,7 @@ main_server_logic <- function(input, output, session, values) {
   
   
   # Current page
-  current_view <- reactiveVal("funding")
+  current_view <- reactiveVal("expense")
   
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -53,29 +53,13 @@ main_server_logic <- function(input, output, session, values) {
   # Event: Adding New Funding
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())
-    
-    updateDateInput(
-      session,
-      "valid_from_date",
-      value = NULL
-    )
   })
   
 
   # Event: Adding New Expense
   
   observeEvent(input$add_expense, {
-    showModal(
-      tagAppendAttributes(
-        modalDialog(
-          title = "Add New Expense",
-          body = add_expense_modal(),
-          easyClose = TRUE,
-          footer = actionButton("add_expense_confirm", "Add Expense", class = "add-expense-confirm")
-        ),
-        class = "add-expense-popup"
-      )
-    )
+    showModal(upload_expense_modal())
   })
   
   
