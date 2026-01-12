@@ -127,16 +127,18 @@ main_server_logic <- function(input, output, session, values) {
     dat <- table_data()
 
     # Reorder rows
-    dat[new, ] <- dat[old, ]
+    if (!identical(old, new)) {
+      dat[new, ] <- dat[old, ]
 
-    # Update Priority column to reflect new order
-    dat$Priority <- 1:nrow(dat)
+      # Update Priority column to reflect new order
+      dat$Priority <- 1:nrow(dat)
 
-    # Update reactive value
-    table_data(dat)
+      # Update reactive value
+      table_data(dat)
 
-    # Replace data in table without resetting pagination
-    replaceData(proxy, dat, resetPaging = FALSE)
+      # Replace data in table without resetting pagination
+      replaceData(proxy, dat, resetPaging = FALSE)
+    }
   })
 
 
