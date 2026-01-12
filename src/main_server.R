@@ -208,8 +208,17 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
-  output$sample_table <- renderDT({datatable(penguins)})
-  
+  output$sample_table <- renderDT({
+    datatable(
+      penguins,
+      options = list(
+        pageLength = 10,
+        scrollY = "300px",
+        scrollX = TRUE,
+        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
+      )
+    )
+  })
 }
 
 
