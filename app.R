@@ -4,6 +4,8 @@ source("src/main_server.R")
 source("requirements/packages.R")
 
 
+options(shiny.autoreload = TRUE)
+
 # 1. Installing packages
 
 run_setup()

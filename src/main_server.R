@@ -81,13 +81,13 @@ main_server_logic <- function(input, output, session, values) {
     } else if (input$select_second_priority_item == "Categories") {
       categories_view()
     } else {
-      div("No second priority.")
+      div("No second priority.", class = "no-second-priority")
     }
     
   })
   
   # Drag feature
-  output$new_order <- renderPrint({
+  observeEvent(input$drag_categories, {
     input$drag_categories
   })
   

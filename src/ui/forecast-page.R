@@ -58,12 +58,13 @@ forecast_ui <- function() {
             p("Set Priority", class = "card-title"),
             
             div(
+              class = "select_priority_input_type",
+              
               selectInput(
                 "select_priority",
                 label = NULL,
                 choices = c("Column Priority", "Manual Priority")
-              ),
-              style = "margin-top: 15px;"
+              )
             ),
             
             uiOutput("priority_card")
@@ -107,6 +108,8 @@ column_priority_ui <- function() {
           p("1st Priority", style = "margin-bottom: 5px; font-size: 16px;"),
           
           div(
+            class = "select_priority_dropdown",
+            
             selectInput(
               "select_first_priority_item",
               label = NULL,
@@ -130,6 +133,8 @@ column_priority_ui <- function() {
           p("2nd Priority", style = "margin-bottom: 5px; font-size: 16px;"),
           
           div(
+            class = "select_priority_dropdown",
+            
             selectInput(
               "select_second_priority_item",
               label = NULL,
@@ -154,20 +159,40 @@ latest_payment_date_view <- function() {
 }
 
 
-categories <- list("Salary", "Travel", "Equipment")
+categories <- list("Salary", "Travel", "Equipment", "Cheese")
 
 
-categories_view <- function(id) {
+categories_view <- function() {
   
   div(
     tagList(
-      rank_list(
-        text = "drag your items",
-        labels = categories,
-        input_id = "drag_categories",
-        options = sortable_options(swap = TRUE)
+      div(
+        class = "categories-table",
+        
+        div(
+          class = "categories-header",
+          
+          div("Allowed Categories", class = "categories-title")
+          
+        ),
+        
+        div(
+          class = "allowed-categories",
+          
+          rank_list(
+            text = NULL,
+            labels = categories,
+            input_id = "drag_categories",
+            options = sortable_options(
+              swap = TRUE
+            )
+          )
+        )
+        
       ),
-      verbatimTextOutput("new_order")
+      
+      
+      
     )
     
   )
