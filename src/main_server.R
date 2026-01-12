@@ -13,7 +13,7 @@ main_server_logic <- function(input, output, session, values) {
   
   
   # Current page
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("dashboard")
   
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -50,6 +50,14 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
   
+  
+  # Return to session
+  observeEvent(input$return_to_session, {
+    removeModal()
+    current_view("dashboard")
+  })
+  
+  
   # Render priority mode
   output$priority_card <- renderUI({
     
@@ -80,26 +88,25 @@ main_server_logic <- function(input, output, session, values) {
       latest_payment_date_view()
     } else if (input$select_second_priority_item == "Categories") {
       categories_view()
-    } else {
+    } else if (input$select_second_priority_item == "None") {
       div("No second priority.", class = "no-second-priority")
     }
     
   })
   
-  # Drag feature
+  # Dragging feature for categories priority
   observeEvent(input$drag_categories, {
     input$drag_categories
   })
   
   
-  # Event: Adding New Funding
+  # Adding new funding form
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())
   })
   
 
-  # Event: Adding New Expense
-  
+  # Adding new expense form
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal())
   })

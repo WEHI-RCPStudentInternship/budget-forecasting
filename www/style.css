@@ -26,17 +26,14 @@
   font-weight: bold;
 }
 
+.dashboard-box {
+  margin-bottom: 40px;
+}
+
 .info-containers {
   margin-top: 20px;
 }
 
-#dashboard-box {
-  margin-bottom: 40px;
-}
-
-#budget-box {
-  margin-bottom: 40px;
-}
 
 .budget_download_btn {
   background-color: #D1FFE4;
@@ -91,7 +88,6 @@
   border-radius: 15px;
   background-color: #FFDCDC;
 }
-
 
 
 
@@ -390,3 +386,4 @@
 #expense-categories .selectize-input {
   padding: 6px 12px;
 }
+

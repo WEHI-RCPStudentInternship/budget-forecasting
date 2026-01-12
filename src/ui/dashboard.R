@@ -8,10 +8,13 @@ dashboard_ui <- function() {
   div(
     class = "result-container",
     
+    
+    # Main Dashboard Section
+    
     div(
       "Dashboard",
       class = "content-title",
-      id = "dashboard-box",
+      class = "dashboard-box",
       
       div(
         class = "info-containers",
@@ -62,13 +65,15 @@ dashboard_ui <- function() {
       
     ),
     
+    
+    # Budget Allocation Section
+    
     div(
       "Budget Allocation",
       class = "content-title",
-      id = "budget-box",
+      class = "dashboard-box",
       
       div(
-        id = "budget-container",
         class = "info-containers",
         
         card(
@@ -82,13 +87,15 @@ dashboard_ui <- function() {
 
     ),
     
+    
+    # Unallocated Funding Section
+    
     div(
       "Unallocated Funding",
       class = "content-title",
-      id = "leftover-box",
+      class = "dashboard-box",
       
       div(
-        id = "leftover-container",
         class = "info-containers",
         
         card(
@@ -101,6 +108,7 @@ dashboard_ui <- function() {
         
       )
     ),
+    
     
     actionButton("budget_download", "↓ Download Budget Allocation",
                  class = "budget_download_btn"),

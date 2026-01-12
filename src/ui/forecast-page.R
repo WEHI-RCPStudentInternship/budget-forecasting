@@ -14,7 +14,6 @@ forecast_ui <- function() {
       div(
         class = "info-containers",
         
-        # Upload Spreadsheet Card
         
         card(
           id = "upload-card",
@@ -83,6 +82,8 @@ forecast_ui <- function() {
 }
 
 
+# Manual Priority View
+
 manual_priority_ui <- function() {
   
   div(
@@ -91,6 +92,8 @@ manual_priority_ui <- function() {
   )
 }
 
+
+# Column Priority View
 
 column_priority_ui <- function() {
   
@@ -154,6 +157,9 @@ column_priority_ui <- function() {
 
 
 
+
+# Column Priority: Latest Payment Date View
+
 latest_payment_date_view <- function() {
   DTOutput("sample_table")
 }
@@ -162,10 +168,15 @@ latest_payment_date_view <- function() {
 categories <- list("Salary", "Travel", "Equipment", "Cheese")
 
 
+
+# Column Priority: Allowed Categories View
+
 categories_view <- function() {
   
   div(
+    
     tagList(
+      
       div(
         class = "categories-table",
         
@@ -187,11 +198,10 @@ categories_view <- function() {
               swap = TRUE
             )
           )
+          
         )
         
-      ),
-      
-      
+      )
       
     )
     
