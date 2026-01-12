@@ -102,13 +102,13 @@ main_server_logic <- function(input, output, session, values) {
 
   # JavaScript callback for row reorder
   callback <- c(
-    "table.on('row-reorder', function(e, details, edit){",
-    "  var oldRows = [], newRows = [];",
-    "  for(let i=0; i < details.length; ++i){",
-    "    oldRows.push(details[i].oldData);",
-    "    newRows.push(details[i].newData);",
+    "table.on('row-reorder', function(e, details, edit) {",
+    "  var ids = table.column(0).data().toArray();", # Get current id order
+    "  var newOrder = [...ids];",
+    "  for(var entry of details) {",
+    "    newOrder[entry.newPosition] = ids[entry.oldPosition];",
     "  }",
-    "  Shiny.setInputValue('manual_table_rowreorder', {old: oldRows, new: newRows});",
+    "  Shiny.setInputValue('newOrder', newOrder, {priority: 'event'});",
     "});"
   )
 
@@ -116,31 +116,17 @@ main_server_logic <- function(input, output, session, values) {
   proxy <- dataTableProxy("sample_manual_table")
 
   # Observe row reordering events
-  observeEvent(input$manual_table_rowreorder, {
-    req(input$manual_table_rowreorder)
-
-    # Get old and new positions
-    old <- unlist(input$manual_table_rowreorder$old)
-    new <- unlist(input$manual_table_rowreorder$new)
-
-    # Get current data
-    dat <- table_data()
-
-    # Reorder rows
-    if (!identical(old, new)) {
-      dat[new, ] <- dat[old, ]
-
-      # Update Priority column to reflect new order
-      dat$Priority <- 1:nrow(dat)
-
-      # Update reactive value
-      table_data(dat)
-
-      # Replace data in table without resetting pagination
-      replaceData(proxy, dat, resetPaging = FALSE)
-    }
+  observeEvent(input$newOrder, {
+    dat0 <- table_data()
+    # Reorder by matching IDs
+    dat1 <- dat0[match(input$newOrder, dat0$Priority), ]
+    # Update Priority column to reflect new order
+    dat1$Priority <- 1:nrow(dat1)
+    # Update reactive value
+    table_data(dat1)
+    # Replace data in table
+    replaceData(proxy, dat1, resetPaging = FALSE, rownames = FALSE)
   })
-
 
   
   # --- FEATURES: Column Priority ---
