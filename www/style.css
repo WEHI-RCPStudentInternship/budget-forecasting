@@ -111,6 +111,7 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 15px;
+  gap: 15px;
 }
 
 #left-upload {
@@ -122,7 +123,7 @@
 }
 
 #left-upload .shiny-input-container {
-  width: 500px;
+  width: 800px;
 }
 
 #left-upload .input-group {
@@ -150,7 +151,8 @@
 }
 
 #left-upload input[type='text'] {
-  width: auto;
+  flex: 1;
+  min-width: 120px;
   margin-left: 12px;
   border-radius: 10px;
   max-width: 40ch;
