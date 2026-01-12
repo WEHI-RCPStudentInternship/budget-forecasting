@@ -5,7 +5,7 @@
 .tab-buttons {
   border: none;
   border-radius: 25px;
-  background-color: #FDD9D9;
+  background-color: #D8F1FF;
 }
 
 /* DASHBOARD */
@@ -292,6 +292,15 @@
   margin: 30px 0 20px 0;
 }
 
+
+.shiny-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  right: auto;
+  bottom: auto;
+}
 
 
 /* FUNDING AND EXPENSE PAGES */
