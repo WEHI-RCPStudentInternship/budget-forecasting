@@ -12,36 +12,6 @@ main_server_logic <- function(input, output, session, values) {
   # Current page
   current_view <- reactiveVal("dashboard")
 
-  # Test data for manual priority table
-  table_data <- reactiveVal({
-    data.frame(
-      Priority = 1:5,
-      Project_Name = c(
-        "Project Alpha",
-        "Project Beta",
-        "Project Gamma",
-        "Project Delta",
-        "Project Epsilon"
-      ),
-      Category = c(
-        "Research",
-        "Infrastructure",
-        "Education",
-        "Research",
-        "Infrastructure"
-      ),
-      Amount = c(50000, 75000, 30000, 45000, 60000),
-      Payment_Date = as.Date(c(
-        "2026-03-15",
-        "2026-04-01",
-        "2026-02-20",
-        "2026-05-10",
-        "2026-03-25"
-      )),
-      stringsAsFactors = FALSE
-    )
-  })
-
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -126,11 +96,31 @@ main_server_logic <- function(input, output, session, values) {
     input$drag_categories
   })
 
+
+  # --- MANUAL ROW REORDERING LOGIC ---
   # Create proxy for table updates
   proxy <- dataTableProxy("sample_manual_table")
 
   # Observe row reordering events
-  row_reorder(input, table_data, proxy, id_col = "Priority")
+  row_reorder(input, values, proxy, id_col = "index")
+
+  # --- EVENT: Upload Expenses and Funding Data ---
+  observeEvent(input$spreadsheet_upload, {
+    req(input$spreadsheet_upload)
+    path <- input$spreadsheet_upload$datapath
+    
+    tryCatch({
+      data_list <- read_excel_data(path)
+      funding_sources_df <- data_list$funding_sources
+      expense_df <- data_list$expense
+
+      values$funding_sources <- funding_sources_df
+      values$expenses <- expense_df
+      showNotification("Upload successful", type = "message", duration = 3)
+    }, error = function(e) {
+      showNotification(paste("Upload failed:", e$message), type = "error", duration = NULL)
+    })
+  })
 
   # ----------------------------
   # SORTING LOGIC
@@ -233,29 +223,29 @@ main_server_logic <- function(input, output, session, values) {
 
   output$sample_manual_table <- renderDT({
     datatable(
-      table_data(),
+      values$expenses,
       extensions = 'RowReorder',
       selection = 'none',
       callback = JS(row_reorder_callback),
       options = list(
         rowReorder = TRUE,
-        pageLength = 25
+        pageLength = 100
       ),
       rownames = FALSE
     )
   })
 
-  output$sample_table <- renderDT({
-    datatable(
-      penguins,
-      options = list(
-        pageLength = 10,
-        scrollY = "300px",
-        scrollX = TRUE,
-        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
-      )
-    )
-  })
+  # output$sample_table <- renderDT({
+  #   datatable(
+  #     values$expenses(),
+  #     options = list(
+  #       pageLength = 10,
+  #       scrollY = "300px",
+  #       scrollX = TRUE,
+  #       dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
+  #     )
+  #   )
+  # })
 }
 
 

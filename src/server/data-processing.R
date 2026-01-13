@@ -1,18 +1,54 @@
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(shiny)
 
-read_excel_data <- function(file_path) {
+read_excel_data <- function(file_path, sheet_name) {
   # Read the excel file uploaded that contains funding and expense data
   #
   # Arguments:
   # file_path: path to the uploaded excel file
+  # sheet_name: name of the sheet to read
   #
   # Return: List of the expense and funding dataframes
+
+
   funding_sources_df <- read_excel(file_path, sheet = "Funding") %>%
+    #data_validation() %>%
     process_funding_data()
 
   expense_df <- read_excel(file_path, sheet = "Expense") %>%
+    #data_validation() %>%
     process_expense_data()
 
+  showNotification("Data uploaded successfully.", type = "message", duration = 5)
   return(list(funding_sources = funding_sources_df, expense = expense_df))
+}
+
+data_validation <- function(df) {
+  # Validate the data frame for required columns and data types
+  #
+  # Arguments:
+  # df: data frame to validate
+  #
+  # Returns:
+  # is_valid: Boolean indicating if the data frame is valid
+
+  if ("Funding" %in% df$sheet_name) {
+    required_columns <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
+  } else if ("Expense" %in% df$sheet_name) {
+    required_columns <- c("item_id", "expense_category", "planned_amount", "latest_payment_date")
+  } else {
+    return(FALSE)
+  }
+
+  is_valid <- all(required_columns %in% names(df))
+  if (!is_valid) {
+    showNotification("Data validation failed: missing required columns.", type = "error", duration = NULL)
+    stop("Data validation failed.")
+    return(FALSE)
+  }
+  return(df)
 }
 
 process_funding_data <- function(df) {
@@ -84,7 +120,7 @@ process_expense_data <- function(df) {
       latest_payment_date = as.Date(latest_payment_date),
       planned_amount = as.numeric(planned_amount),
       item_id = as.character(item_id)
-    )
+    ) %>%
 
     # Add index
     mutate(index = row_number()) %>%
