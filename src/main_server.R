@@ -62,6 +62,16 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   
+  # Generating Forecast Notification
+  observe({
+    showNotification(
+      "Allocation Finished. Go to Dashboard for result.",
+      duration = 3
+      )
+  }) |>
+    bindEvent(input$generate_forecast)
+  
+  
   # Exiting Session pop-up
   observeEvent(input$exit_session, {
     showModal(
