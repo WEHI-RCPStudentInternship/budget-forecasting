@@ -99,6 +99,9 @@ row_reorder <- function(input, values, proxy, id_col) {
     # Reorder the dataframe
     values$expenses <- values$expenses[new_idx, ]
 
+    # Update the new priority
+    values$expenses[[id_col]] <- seq_len(nrow(values$expenses))
+    
     # Update the DataTable proxy to reflect changes
     replaceData(proxy, values$expenses, resetPaging = FALSE, rownames = FALSE)
   })

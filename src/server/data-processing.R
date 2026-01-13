@@ -84,9 +84,6 @@ process_funding_data <- function(df) {
     rowwise() %>%
     mutate(allowed_categories = list(allowed_categories)) %>%
 
-    # Add index
-    mutate(index = row_number()) %>%
-    select(index, everything()) %>%
     ungroup() %>% # Ungroup after rowwise operation
     
 
@@ -112,8 +109,8 @@ process_expense_data <- function(df) {
   
 
   expense_df <- df %>%
-    select(`Item ID`, `Expense Category`, `Planned Amount`, `Latest Payment Date`) %>%
-    setNames(nm = c("item_id", "expense_category", "planned_amount", "latest_payment_date")) %>%
+    select(`Priority`,`Item ID`, `Expense Category`, `Planned Amount`, `Latest Payment Date`) %>%
+    setNames(nm = c("priority", "item_id", "expense_category", "planned_amount", "latest_payment_date")) %>%
     
     # Convert data types
     mutate(
@@ -123,8 +120,7 @@ process_expense_data <- function(df) {
     ) %>%
 
     # Add index
-    mutate(index = row_number()) %>%
-    select(index, everything()) %>%
+    mutate(old_index = row_number()) %>%
 
     # Remove rows with NA in item_id
     filter(!is.na(item_id))

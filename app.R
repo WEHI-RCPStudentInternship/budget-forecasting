@@ -44,7 +44,6 @@ server <- function(input, output, session) {
   # Memory (to be filled)
   values <- reactiveValues(
     funding_sources = data.frame(
-      index = integer(),
       source_id = character(),
       allowed_categories = list(),
       valid_from = as.Date(character()),
@@ -52,11 +51,12 @@ server <- function(input, output, session) {
       amount = numeric()
     ),
     expenses = data.frame(
-      index = integer(),
+      priority = integer(),
       item_id = character(),
       expense_category = character(),
       planned_amount = numeric(),
-      latest_payment_date = as.Date(character())
+      latest_payment_date = as.Date(character()),
+      old_index = integer()
     ),
     allocation_result = data.frame()
   )

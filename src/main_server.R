@@ -102,7 +102,7 @@ main_server_logic <- function(input, output, session, values) {
   proxy <- dataTableProxy("sample_manual_table")
 
   # Observe row reordering events
-  row_reorder(input, values, proxy, id_col = "index")
+  row_reorder(input, values, proxy, id_col = "priority")
 
   # --- EVENT: Upload Expenses and Funding Data ---
   observeEvent(input$spreadsheet_upload, {
@@ -214,16 +214,16 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   output$sample_funding_table <- renderDT({
-    datatable(penguins)
+    datatable(values$funding_sources)
   })
 
   output$sample_expense_table <- renderDT({
-    datatable(penguins)
+    datatable(values$expenses)
   })
 
   output$sample_manual_table <- renderDT({
     datatable(
-      values$expenses,
+      values$expenses |> select(-old_index),
       extensions = 'RowReorder',
       selection = 'none',
       callback = JS(row_reorder_callback),
