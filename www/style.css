@@ -293,16 +293,6 @@
 }
 
 
-.shiny-notification {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  right: auto;
-  bottom: auto;
-}
-
-
 /* FUNDING AND EXPENSE PAGES */
 
 .input-title-container {
