@@ -90,3 +90,30 @@ main_sorting_expenses <- function(expenses_data,
   return(expenses_sorted)
 }
 
+# --- Manual Row Reordering ---
+row_reorder <- function(input, table_data, proxy, id_col = "Priority") {
+  observeEvent(input$newOrder, {
+    dat0 <- table_data()
+
+    dat1 <- dat0[match(input$newOrder, dat0[[id_col]]), ]
+
+    dat1[[id_col]] <- 1:nrow(dat1)
+
+    table_data(dat1)
+
+    replaceData(proxy, dat1, resetPaging = FALSE, rownames = FALSE)
+  })
+}
+
+row_reorder_callback <- c(
+  "table.on('row-reorder', function(e, details, edit) {",
+  "  var ids = table.column(0).data().toArray();", # Get current id order
+  "  var newOrder = [...ids];",
+  "  for(var entry of details) {",
+  "    newOrder[entry.newPosition] = ids[entry.oldPosition];",
+  "  }",
+  "  Shiny.setInputValue('newOrder', newOrder, {priority: 'event'});",
+  "});"
+)
+
+
