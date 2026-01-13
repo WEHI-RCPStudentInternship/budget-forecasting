@@ -28,8 +28,8 @@ library(palmerpenguins)
 library(shinyWidgets)
 library(sortable)
 
-library(gurobi)
-library(Matrix)
+#library(gurobi)
+#library(Matrix)
 
 
 # 3. Load UI

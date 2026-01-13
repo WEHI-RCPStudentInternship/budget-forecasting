@@ -110,33 +110,11 @@ main_server_logic <- function(input, output, session, values) {
     
   })
 
-  # JavaScript callback for row reorder
-  callback <- c(
-    "table.on('row-reorder', function(e, details, edit) {",
-    "  var ids = table.column(0).data().toArray();", # Get current id order
-    "  var newOrder = [...ids];",
-    "  for(var entry of details) {",
-    "    newOrder[entry.newPosition] = ids[entry.oldPosition];",
-    "  }",
-    "  Shiny.setInputValue('newOrder', newOrder, {priority: 'event'});",
-    "});"
-  )
-
   # Create proxy for table updates
   proxy <- dataTableProxy("sample_manual_table")
 
   # Observe row reordering events
-  observeEvent(input$newOrder, {
-    dat0 <- table_data()
-    # Reorder by matching IDs
-    dat1 <- dat0[match(input$newOrder, dat0$Priority), ]
-    # Update Priority column to reflect new order
-    dat1$Priority <- 1:nrow(dat1)
-    # Update reactive value
-    table_data(dat1)
-    # Replace data in table
-    replaceData(proxy, dat1, resetPaging = FALSE, rownames = FALSE)
-  })
+  row_reorder(input, table_data, proxy, id_col = "Priority")
 
   
   # --- FEATURES: Column Priority ---
@@ -278,7 +256,7 @@ main_server_logic <- function(input, output, session, values) {
       table_data(),
       extensions = 'RowReorder',
       selection = 'none',
-      callback = JS(callback),
+      callback = JS(row_reorder_callback),
       options = list(
         rowReorder = TRUE,
         pageLength = 25
