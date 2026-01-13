@@ -191,6 +191,29 @@
   min-width: 0;
 }
 
+/* DATA TABLE IN COL PRIORITY STYLES */
+#priority-container .dataTables_wrapper .dataTables_filter {
+  float: left;
+  text-align: left;
+  width: 100%;
+  min-width: 60px;
+  margin-bottom: 10px;
+}
+
+#priority-container .dataTables_filter label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+#priority-container .dataTables_filter input {
+  flex: 1;
+  max-width: 400px;
+  min-width: 60px;
+  margin-left: 0px !important;
+}
+
 #set-priority-card .html-fill-container,
 #upload-card .html-fill-container {
   padding: 16px 25px;
@@ -292,6 +315,12 @@
   margin: 30px 0 20px 0;
 }
 
+/* Prevent text selection during drag */
+#sample_manual_table tbody td {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
 
 /* FUNDING AND EXPENSE PAGES */
 
