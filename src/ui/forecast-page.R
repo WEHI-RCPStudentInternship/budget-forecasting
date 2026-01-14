@@ -32,7 +32,7 @@ forecast_ui <- function() {
               
               div(
                 id = "right-download",
-                actionButton("download_template", "↓ Download Template",
+                downloadButton("download_template", "Download Template",
                                  class = "template-download-btn")
               )
             )
