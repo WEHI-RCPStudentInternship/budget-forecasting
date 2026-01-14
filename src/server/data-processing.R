@@ -66,8 +66,8 @@ process_funding_data <- function(df) {
   # - amount: Numeric
 
   funding_sources_df <- df %>%
-    select(`Source ID`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`) %>%
-    setNames(nm = c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")) %>%
+    select(`Source ID`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
+    setNames(nm = c("source_id", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
 
     # Convert data types
     mutate(
@@ -109,9 +109,9 @@ process_expense_data <- function(df) {
   
 
   expense_df <- df %>%
-    select(`Priority`,`Item ID`, `Expense Category`, `Planned Amount`, `Latest Payment Date`) %>%
-    setNames(nm = c("priority", "item_id", "expense_category", "planned_amount", "latest_payment_date")) %>%
-    
+    select(`Priority`,`Item ID`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
+    setNames(nm = c("priority", "item_id", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
+
     # Convert data types
     mutate(
       latest_payment_date = as.Date(latest_payment_date),

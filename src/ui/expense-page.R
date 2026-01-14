@@ -29,7 +29,7 @@ expense_ui <- function() {
         style = "padding: 16px;"
       )
     ),
-    actionButton("initial_download", "↓ Download Excel file", class = "initial-excel-download") 
+    downloadButton("initial_download", "Download Excel file", class = "initial-excel-download") 
   )
 }
 

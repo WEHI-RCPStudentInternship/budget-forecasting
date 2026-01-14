@@ -48,7 +48,8 @@ server <- function(input, output, session) {
       allowed_categories = list(),
       valid_from = as.Date(character()),
       valid_to = as.Date(character()),
-      amount = numeric()
+      amount = numeric(),
+      notes = character()
     ),
     expenses = data.frame(
       priority = integer(),
@@ -56,13 +57,14 @@ server <- function(input, output, session) {
       expense_category = character(),
       planned_amount = numeric(),
       latest_payment_date = as.Date(character()),
+      notes = character(),
       old_index = integer()
     ),
     allocation_result = data.frame()
   )
   
   main_server_logic(input, output, session, values)
-  # main_output()
+  main_output(input, output, session, values)
   
 }
 
