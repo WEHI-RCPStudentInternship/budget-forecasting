@@ -18,21 +18,17 @@ main_output <- function(input, output, session, values) {
   output$initial_download <- downloadHandler(
     filename = function() "budget_data.xlsx",
     content = function(file) {
-      print(values$expenses)
-      print(values$funding_sources)
-      if (is.null(values$expenses) || is.null(values$funding_sources)) {
-        showNotification(
-          "No data available to download. Please upload a file first.",
-          type = "error"
-        )
-        return()
+      # Check if data is available
+      if (!nrow(values$expenses) == 0 && !nrow(values$funding_sources) == 0) {
+        showNotification("Preparing download...", type = "message", duration = 2) 
+        saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
+      } else {
+        showNotification("No data available to download.", type = "error", duration = 5)
+        saveWorkbook(create_budget_template_wb(), file, overwrite = TRUE)
       }
-      saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
     }
   )
 }
-
-
 
 # Helper functions:
 

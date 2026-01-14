@@ -45,7 +45,7 @@ server <- function(input, output, session) {
   values <- reactiveValues(
     funding_sources = data.frame(
       source_id = character(),
-      allowed_categories = list(),
+      allowed_categories = character(),
       valid_from = as.Date(character()),
       valid_to = as.Date(character()),
       amount = numeric(),

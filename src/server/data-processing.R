@@ -71,22 +71,17 @@ process_funding_data <- function(df) {
 
     # Convert data types
     mutate(
+      allowed_categories = strsplit(as.character(allowed_categories), ",\\s*"),
       valid_from = as.Date(valid_from),
       valid_to = as.Date(valid_to),
       amount = as.numeric(amount),
-      source_id = as.character(source_id)
+      source_id = as.character(source_id),
+      notes = as.character(notes)
     ) %>%
 
-    # Unnest categories
-    mutate(
-      allowed_categories = strsplit(as.character(allowed_categories), ",\\s*")
-    ) %>%
     rowwise() %>%
-    mutate(allowed_categories = list(allowed_categories)) %>%
-
     ungroup() %>% # Ungroup after rowwise operation
     
-
     # Remove rows with NA in source_id
     filter(!is.na(source_id))
 

@@ -205,13 +205,13 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # Sample table outputs (for viewings only)
-  output$sample_budget_table <- renderDT({
-    datatable(penguins)
-  })
+  # output$sample_budget_table <- renderDT({
+  #   datatable(penguins)
+  # })
 
-  output$sample_leftover_table <- renderDT({
-    datatable(penguins)
-  })
+  # output$sample_leftover_table <- renderDT({
+  #   datatable(penguins)
+  # })
 
   output$sample_funding_table <- renderDT({
     datatable(values$funding_sources)
