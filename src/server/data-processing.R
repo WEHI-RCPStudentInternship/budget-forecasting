@@ -1,8 +1,3 @@
-library(readxl)
-library(dplyr)
-library(tidyr)
-library(shiny)
-
 read_excel_data <- function(file_path, sheet_name) {
   # Read the excel file uploaded that contains funding and expense data
   #
@@ -11,7 +6,6 @@ read_excel_data <- function(file_path, sheet_name) {
   # sheet_name: name of the sheet to read
   #
   # Return: List of the expense and funding dataframes
-
 
   funding_sources_df <- read_excel(file_path, sheet = "Funding") %>%
     #data_validation() %>%
@@ -102,7 +96,6 @@ process_expense_data <- function(df) {
   # - planned_amount: Numeric
   # - latest_payment_date: Date
   
-
   expense_df <- df %>%
     select(`Priority`,`Item ID`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
     setNames(nm = c("priority", "item_id", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%

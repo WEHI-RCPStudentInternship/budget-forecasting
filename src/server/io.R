@@ -1,10 +1,12 @@
-
-
-# Handles input and output
-# Uploads, downloads and output schema (excel and reports)
-
-
 main_output <- function(input, output, session, values) {
+  # Function for downloading excel files
+  #
+  # Arguments:
+  # input: Shiny input object
+  # output: Shiny output object
+  # session
+  # values: reactiveValues containing expenses and funding_sources dataframes
+
 
   # --- HANDLER: Download Excel Template ---
   output$download_template <- downloadHandler(
@@ -28,12 +30,18 @@ main_output <- function(input, output, session, values) {
       }
     }
   )
+
+  # --- HANDLER: Download Allocation Report ---
 }
 
 # Helper functions:
 
-# --- Function: Download current data as Excel file ---
 input_excel_download <- function(values) {
+  # Download current data as Excel file
+  #
+  # Arguments:
+  # values: reactiveValues containing expenses and funding_sources dataframes
+
   wb <- createWorkbook()
 
   # Create worksheets
@@ -45,24 +53,45 @@ input_excel_download <- function(values) {
   export_funding <- values$funding_sources
 
   # Rename columns and output
-  colnames(export_expenses) <- c("Priority", "Item ID", "Expense Category", "Planned Amount", "Latest Payment Date", "Notes", "old_index")
-  writeData(wb, "Expenses", export_expenses |> select(-old_index), withFilter = TRUE)
+  colnames(export_expenses) <- c(
+    "Priority",
+    "Item ID",
+    "Expense Category",
+    "Planned Amount",
+    "Latest Payment Date",
+    "Notes",
+    "old_index"
+  )
+  writeData(
+    wb,
+    "Expenses",
+    export_expenses |> select(-old_index),
+    withFilter = TRUE
+  )
 
-  colnames(export_funding) <- c("Source ID", "Allowed Categories", "Valid From", "Valid To", "Amount", "Notes")
+  colnames(export_funding) <- c(
+    "Source ID",
+    "Allowed Categories",
+    "Valid From",
+    "Valid To",
+    "Amount",
+    "Notes"
+  )
   writeData(wb, "Funding", export_funding, withFilter = TRUE)
 
   wb
 }
 
-# --- Function: Create Excel template workbook ---
 create_budget_template_wb <- function() {
+  # Create Excel template workbook
+  
   wb <- createWorkbook()
   addWorksheet(wb, "Expenses")
   writeData(
     wb,
     "Expenses",
     data.frame(
-      `Priority`= integer(),
+      `Priority` = integer(),
       `Item ID` = character(),
       `Expense Category` = character(),
       `Planned Amount` = numeric(),

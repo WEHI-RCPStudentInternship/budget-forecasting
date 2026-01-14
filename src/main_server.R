@@ -62,7 +62,7 @@ main_server_logic <- function(input, output, session, values) {
     current_view("dashboard")
   })
 
-  # Render priority mode
+  # --- OUTPUT: Render priority mode ---
   output$priority_card <- renderUI({
     if (input$select_priority == "Manual Priority") {
       manual_priority_ui()
@@ -71,7 +71,7 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
 
-  # Render first priority
+  # --- OUTPUT: Render first priority ---
   output$first_priority <- renderUI({
     if (input$select_first_priority_item == "Latest Payment Date") {
       latest_payment_date_view()
@@ -80,7 +80,7 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
 
-  # Render second priority
+  # --- OUTPUT: Render second priority ---
   output$second_priority <- renderUI({
     if (input$select_second_priority_item == "Latest Payment Date") {
       latest_payment_date_view()
@@ -91,13 +91,13 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
 
-  # Dragging feature for categories priority
+  # --- EVENT: Dragging feature for categories priority ---
   observeEvent(input$drag_categories, {
     input$drag_categories
   })
 
 
-  # --- MANUAL ROW REORDERING LOGIC ---
+  # ------ MANUAL ROW REORDERING LOGIC ------
   # Create proxy for table updates
   proxy <- dataTableProxy("sample_manual_table")
 
@@ -121,9 +121,10 @@ main_server_logic <- function(input, output, session, values) {
       showNotification(paste("Upload failed:", e$message), type = "error", duration = NULL)
     })
   })
+  # ---------------------------------------------------
 
-  # ----------------------------
-  # SORTING LOGIC
+  
+  # ------- COLUMN-BASED EXPENSES SORTING LOGIC -------
   # This section handles sorting of expenses based on user selection:
   # - Manual sorting (drag-and-drop order from UI)
   # - Sort by column (user-defined criteria and category order)

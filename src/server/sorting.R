@@ -92,6 +92,15 @@ main_sorting_expenses <- function(expenses_data,
 
 # --- Manual Row Reordering ---
 row_reorder <- function(input, values, proxy, id_col) {
+  # Handles manual row reordering of the expenses dataframe 
+  # based on user drag-and-drop actions in the DataTable.
+  #
+  # Arguments:
+  # input: Shiny input object
+  # values: reactiveValues containing expenses dataframe
+  # proxy: DataTable proxy object for expenses table
+  # id_col: Name of the column used as unique identifier for matching rows
+
   observeEvent(input$newOrder, {
     # Match output with indexes
     new_idx <- match(input$newOrder, values$expenses[[id_col]])
@@ -107,6 +116,7 @@ row_reorder <- function(input, values, proxy, id_col) {
   })
 }
 
+# JavaScript callback for row reordering
 row_reorder_callback <- c(
   "table.on('row-reorder', function(e, details, edit) {",
   "  var ids = table.column(0).data().toArray();", # Get current id order
