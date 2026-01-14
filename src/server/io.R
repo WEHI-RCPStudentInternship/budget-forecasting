@@ -18,7 +18,16 @@ main_output <- function(input, output, session, values) {
   output$initial_download <- downloadHandler(
     filename = function() "budget_data.xlsx",
     content = function(file) {
-      input_excel_download(values)
+      print(values$expenses)
+      print(values$funding_sources)
+      if (is.null(values$expenses) || is.null(values$funding_sources)) {
+        showNotification(
+          "No data available to download. Please upload a file first.",
+          type = "error"
+        )
+        return()
+      }
+      saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
     }
   )
 }
@@ -30,20 +39,23 @@ main_output <- function(input, output, session, values) {
 # --- Function: Download current data as Excel file ---
 input_excel_download <- function(values) {
   wb <- createWorkbook()
-  
+
+  # Create worksheets
   addWorksheet(wb, "Expenses")
-  
-  temp <- values
-  
-  # Rename columns for output
-  colnames(temp$expenses) <- c("Priority", "Item ID", "Expense Category", "Planned Amount", "Latest Payment Date", "Notes", "old_index")
-  writeData(wb, "Expenses", temp$expenses |> select(-old_index), withFilter = TRUE)
-
-  colnames(temp$funding) <- c("Source ID", "Name", "Allowed categories", "Valid From", "Valid To", "Amount", "Notes")
   addWorksheet(wb, "Funding")
-  writeData(wb, "Funding", temp$funding, withFilter = TRUE)
 
-  saveWorkbook(wb, file, overwrite = TRUE)
+  # Temp dataframes for export
+  export_expenses <- values$expenses
+  export_funding <- values$funding_sources
+
+  # Rename columns and output
+  colnames(export_expenses) <- c("Priority", "Item ID", "Expense Category", "Planned Amount", "Latest Payment Date", "Notes", "old_index")
+  writeData(wb, "Expenses", export_expenses |> select(-old_index), withFilter = TRUE)
+
+  colnames(export_funding) <- c("Source ID", "Allowed Categories", "Valid From", "Valid To", "Amount", "Notes")
+  writeData(wb, "Funding", export_funding, withFilter = TRUE)
+
+  wb
 }
 
 # --- Function: Create Excel template workbook ---
