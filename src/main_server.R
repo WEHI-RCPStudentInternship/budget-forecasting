@@ -195,24 +195,56 @@ main_server_logic <- function(input, output, session, values) {
     # ----------------------------
   })
 
+  # --- EVENTS: Add Funding Button ---
   # Adding new funding form
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())
-
-    observeEvent(input$add_funding_confirm, {
-      add_funding_button(input, output, session, values)
-      removeModal()
-    })
   })
 
+  observeEvent(input$add_funding_confirm, {
+    add_funding_button(input, values)
+    removeModal()
+  })
+
+  # --- EVENTS: Delete Funding Button ---
+  # Delete button pop up
+  output$delete_funding_btn <- renderUI({
+    selected <- input$sample_funding_table_rows_selected
+    if (length(selected) > 0) {
+      actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+    }
+  })
+
+  # Deleting selected funding
+  observeEvent(input$delete_funding, {
+    selected <- input$sample_funding_table_rows_selected
+    values$funding_sources <- delete_row(values$funding_sources, selected)
+  })
+
+  # --- EVENTS: Add Expense Button ---
   # Adding new expense form
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal())
+  })
 
-    observeEvent(input$add_expense_confirm, {
-      add_expense_button(input, output, session, values)
-      removeModal()
-    })
+  observeEvent(input$add_expense_confirm, {
+    add_expense_button(input, values)
+    removeModal()
+  })
+
+  # --- EVENTS: Delete Expense Button ---
+  # Delete button pop up
+  output$delete_expense_btn <- renderUI({
+    selected <- input$sample_expense_table_rows_selected
+    if (length(selected) > 0) {
+      actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+    }
+  })
+
+  # Deleting selected expense
+  observeEvent(input$delete_expense, {
+    selected <- input$sample_expense_table_rows_selected
+    values$expenses <- delete_row(values$expenses, selected)
   })
 
   # Sample table outputs (for viewings only)
