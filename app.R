@@ -28,8 +28,8 @@ library(sortable)
 library(ggplot2)
 library(plotly)
 
-library(gurobi)
-library(Matrix)
+# library(gurobi)
+# library(Matrix)
 
 
 # 3. Load UI

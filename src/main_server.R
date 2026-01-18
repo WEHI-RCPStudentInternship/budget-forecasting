@@ -99,11 +99,25 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # --- MANUAL ROW REORDERING LOGIC ---
-  # Create proxy for table updates
+  # Temp order and proxy table
+  pending_order <- reactiveVal(NULL)
   proxy <- dataTableProxy("sample_manual_table")
 
-  # Observe row reordering events
-  row_reorder(input, values, proxy, id_col = "priority")
+  observeEvent(input$newOrder, {
+    new_idx <- match(input$newOrder, values$expenses$priority)
+    pending_order(values$expenses[new_idx, ])
+  })
+
+  observeEvent(input$save_manual_order, {
+    values$expenses <- row_reorder(input$newOrder, values, proxy, id_col = "priority")
+    pending_order(NULL)
+    showNotification("Manual order saved", type = "message", duration = 3)
+  })
+
+  observeEvent(input$cancel_manual_order, {
+    pending_order(NULL)
+    showNotification("Manual order cancelled", type = "message", duration = 3)
+  })
 
   # --- EVENT: Upload Expenses and Funding Data ---
   observeEvent(input$spreadsheet_upload, {
@@ -261,8 +275,7 @@ main_server_logic <- function(input, output, session, values) {
   output$sample_funding_table <- renderDT({
     
     datatable(
-      as.data.frame(penguins[1:5,]),
-      extensions = "Buttons",
+      values$funding_sources,
       options = list(
         dom = "<'row align-items-center'
                 <'col-sm-6'l>
@@ -274,19 +287,10 @@ main_server_logic <- function(input, output, session, values) {
                 <'col-sm-5'i>
                 <'col-sm-7'p>
               >",
-        buttons = list(
-          list(
-            extend = "collection",
-            className = "delete-row",
-            text = "Delete row",
-            action = DT::JS(
-              "function (e,dt,node,config) {
-                  dt.rows('.selected').remove().draw();
-              }"
-            )
-          )
-        )
-      )
+        pageLength = 10,
+        scrollX = TRUE
+      ),
+      rownames = FALSE
     )
   }, server = FALSE)
   
@@ -294,7 +298,6 @@ main_server_logic <- function(input, output, session, values) {
   output$sample_expense_table <- renderDT({
     datatable(
       values$expenses |> select(-old_index),
-      extensions = "Buttons",
       options = list(
         pageLength = 10,
         scrollX = TRUE,
@@ -307,19 +310,7 @@ main_server_logic <- function(input, output, session, values) {
               <'row'
                 <'col-sm-5'i>
                 <'col-sm-7'p>
-              >",
-        buttons = list(
-          list(
-            extend = "collection",
-            className = "delete-row",
-            text = "Delete row",
-            action = DT::JS(
-              "function (e,dt,node,config) {
-                  dt.rows('.selected').remove().draw();
-              }"
-            )
-          )
-        )
+              >"
       ),
       rownames = FALSE
     )
@@ -348,7 +339,13 @@ main_server_logic <- function(input, output, session, values) {
   
   output$sample_priority_table <- renderDT({
     datatable(
-      penguins
+      values$expenses |> select(-old_index),
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
+      ),
+      rownames = FALSE
     )
   })
 
