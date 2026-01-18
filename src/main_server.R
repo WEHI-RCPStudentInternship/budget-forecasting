@@ -12,6 +12,7 @@ source("src/server/buttons.R")
 main_server_logic <- function(input, output, session, values) {
   # Current page
   current_view <- reactiveVal("forecast")
+  
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -74,8 +75,8 @@ main_server_logic <- function(input, output, session, values) {
 
   # Render first priority
   output$first_priority <- renderUI({
-    if (input$select_first_priority_item == "Latest Payment Date") {
-      latest_payment_date_view()
+    if (input$select_first_priority_item == "Payment Date") {
+      payment_date_view()
     } else {
       categories_view()
     }
@@ -83,8 +84,8 @@ main_server_logic <- function(input, output, session, values) {
 
   # Render second priority
   output$second_priority <- renderUI({
-    if (input$select_second_priority_item == "Latest Payment Date") {
-      latest_payment_date_view()
+    if (input$select_second_priority_item == "Payment Date") {
+      payment_date_view()
     } else if (input$select_second_priority_item == "Categories") {
       categories_view()
     } else if (input$select_second_priority_item == "None") {
@@ -97,27 +98,12 @@ main_server_logic <- function(input, output, session, values) {
     input$drag_categories
   })
 
-
   # --- MANUAL ROW REORDERING LOGIC ---
   # Create proxy for table updates
   proxy <- dataTableProxy("sample_manual_table")
 
-  pending_order <- reactiveVal(NULL)
-  observeEvent(input$newOrder, {
-    new_idx <- match(input$newOrder, values$expenses$priority)
-    pending_order(values$expenses[new_idx, ])
-  })
-
-  observeEvent(input$save_manual_order, {
-    values$expenses <- row_reorder(input$newOrder, values, proxy, id_col = "priority")
-    pending_order(NULL)
-    showNotification("Manual order saved", type = "message", duration = 3)
-  })
-
-  observeEvent(input$cancel_manual_order, {
-    pending_order(NULL)
-    showNotification("Manual order cancelled", type = "message", duration = 3)
-  })
+  # Observe row reordering events
+  row_reorder(input, values, proxy, id_col = "priority")
 
   # --- EVENT: Upload Expenses and Funding Data ---
   observeEvent(input$spreadsheet_upload, {
@@ -136,6 +122,8 @@ main_server_logic <- function(input, output, session, values) {
       showNotification(paste("Upload failed:", e$message), type = "error", duration = NULL)
     })
   })
+  
+  
 
   # ----------------------------
   # SORTING LOGIC
@@ -271,20 +259,71 @@ main_server_logic <- function(input, output, session, values) {
   # })
 
   output$sample_funding_table <- renderDT({
-    datatable(values$funding_sources)
-  })
+    
+    datatable(
+      as.data.frame(penguins[1:5,]),
+      extensions = "Buttons",
+      options = list(
+        dom = "<'row align-items-center'
+                <'col-sm-6'l>
+                <'col-sm-6 text-end'B>
+              >
+              <'row'<'col-sm-12'f>>
+              t
+              <'row'
+                <'col-sm-5'i>
+                <'col-sm-7'p>
+              >",
+        buttons = list(
+          list(
+            extend = "collection",
+            className = "delete-row",
+            text = "Delete row",
+            action = DT::JS(
+              "function (e,dt,node,config) {
+                  dt.rows('.selected').remove().draw();
+              }"
+            )
+          )
+        )
+      )
+    )
+  }, server = FALSE)
+  
 
   output$sample_expense_table <- renderDT({
     datatable(
       values$expenses |> select(-old_index),
+      extensions = "Buttons",
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
+        dom = "<'row align-items-center'
+                <'col-sm-6'l>
+                <'col-sm-6 text-end'B>
+              >
+              <'row'<'col-sm-12'f>>
+              t
+              <'row'
+                <'col-sm-5'i>
+                <'col-sm-7'p>
+              >",
+        buttons = list(
+          list(
+            extend = "collection",
+            className = "delete-row",
+            text = "Delete row",
+            action = DT::JS(
+              "function (e,dt,node,config) {
+                  dt.rows('.selected').remove().draw();
+              }"
+            )
+          )
+        )
       ),
       rownames = FALSE
     )
-  })
+  }, server = FALSE)
 
   output$sample_manual_table <- renderDT({
     print(pending_order())
@@ -305,7 +344,13 @@ main_server_logic <- function(input, output, session, values) {
       ),
       rownames = FALSE
     )
-  }, server = TRUE)
+  })
+  
+  output$sample_priority_table <- renderDT({
+    datatable(
+      penguins
+    )
+  })
 
   # output$sample_table <- renderDT({
   #   datatable(
@@ -319,9 +364,6 @@ main_server_logic <- function(input, output, session, values) {
   #   )
   # })
 }
-
-
-
 
 
 
