@@ -11,7 +11,7 @@ source("src/server/buttons.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("funding")
+  current_view <- reactiveVal("forecast")
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -102,8 +102,22 @@ main_server_logic <- function(input, output, session, values) {
   # Create proxy for table updates
   proxy <- dataTableProxy("sample_manual_table")
 
-  # Observe row reordering events
-  row_reorder(input, values, proxy, id_col = "priority")
+  pending_order <- reactiveVal(NULL)
+  observeEvent(input$newOrder, {
+    new_idx <- match(input$newOrder, values$expenses$priority)
+    pending_order(values$expenses[new_idx, ])
+  })
+
+  observeEvent(input$save_manual_order, {
+    values$expenses <- row_reorder(input$newOrder, values, proxy, id_col = "priority")
+    pending_order(NULL)
+    showNotification("Manual order saved", type = "message", duration = 3)
+  })
+
+  observeEvent(input$cancel_manual_order, {
+    pending_order(NULL)
+    showNotification("Manual order cancelled", type = "message", duration = 3)
+  })
 
   # --- EVENT: Upload Expenses and Funding Data ---
   observeEvent(input$spreadsheet_upload, {
@@ -273,8 +287,15 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   output$sample_manual_table <- renderDT({
+    print(pending_order())
+    if(!is.null(pending_order())) {
+      df <- pending_order()
+    }
+    else {
+      df <- values$expenses
+    }
     datatable(
-      values$expenses |> select(-old_index),
+      df |> select(-old_index),
       extensions = 'RowReorder',
       selection = 'none',
       callback = JS(row_reorder_callback),
