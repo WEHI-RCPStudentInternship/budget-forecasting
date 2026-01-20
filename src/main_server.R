@@ -7,10 +7,12 @@ source("src/server/data-processing.R")
 source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
+source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("dashboard")
+  current_view <- reactiveVal("forecast")
+  
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -67,14 +69,18 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_priority == "Manual Priority") {
       manual_priority_ui()
     } else {
+      if (!is.null(pending_order())) {
+        showNotification("Unsaved manual order discarded", type = "message", duration = 3)
+        pending_order(NULL)
+      }
       column_priority_ui()
     }
   })
 
   # --- OUTPUT: Render first priority ---
   output$first_priority <- renderUI({
-    if (input$select_first_priority_item == "Latest Payment Date") {
-      latest_payment_date_view()
+    if (input$select_first_priority_item == "Payment Date") {
+      payment_date_view()
     } else {
       categories_view()
     }
@@ -82,8 +88,8 @@ main_server_logic <- function(input, output, session, values) {
 
   # --- OUTPUT: Render second priority ---
   output$second_priority <- renderUI({
-    if (input$select_second_priority_item == "Latest Payment Date") {
-      latest_payment_date_view()
+    if (input$select_second_priority_item == "Payment Date") {
+      payment_date_view()
     } else if (input$select_second_priority_item == "Categories") {
       categories_view()
     } else if (input$select_second_priority_item == "None") {
@@ -96,13 +102,29 @@ main_server_logic <- function(input, output, session, values) {
     input$drag_categories
   })
 
-
-  # ------ MANUAL ROW REORDERING LOGIC ------
-  # Create proxy for table updates
+  # --- EVENT: Manual Row Reordering ---
+  # Temp order and proxy table
+  pending_order <- reactiveVal(NULL)
   proxy <- dataTableProxy("sample_manual_table")
 
-  # Observe row reordering events
-  row_reorder(input, values, proxy, id_col = "priority")
+  # Update temp order when user drags rows
+  observeEvent(input$newOrder, {
+    new_idx <- match(input$newOrder, values$expenses$priority)
+    pending_order(values$expenses[new_idx, ])
+  })
+
+  # Save manual order
+  observeEvent(input$save_manual_order, {
+    values$expenses <- row_reorder(input$newOrder, values$expenses, proxy, id_col = "priority")
+    pending_order(NULL)
+    showNotification("Manual order saved", type = "message", duration = 3)
+  })
+
+  # Cancel manual order
+  observeEvent(input$cancel_manual_order, {
+    pending_order(NULL)
+    showNotification("Manual order cancelled", type = "message", duration = 3)
+  })
 
   # --- EVENT: Upload Expenses and Funding Data ---
   observeEvent(input$spreadsheet_upload, {
@@ -118,13 +140,14 @@ main_server_logic <- function(input, output, session, values) {
       values$expenses <- expense_df
       showNotification("Data saved successfully", type = "message", duration = 3)
     }, error = function(e) {
-      showNotification(paste("Upload failed:", e$message), type = "error", duration = NULL)
+      showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
     })
   })
-  # ---------------------------------------------------
-
   
-  # ------- COLUMN-BASED EXPENSES SORTING LOGIC -------
+  
+
+  # ----------------------------
+  # SORTING LOGIC
   # This section handles sorting of expenses based on user selection:
   # - Manual sorting (drag-and-drop order from UI)
   # - Sort by column (user-defined criteria and category order)
@@ -195,14 +218,56 @@ main_server_logic <- function(input, output, session, values) {
     # ----------------------------
   })
 
+  # --- EVENTS: Add Funding Button ---
   # Adding new funding form
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())
   })
 
+  observeEvent(input$add_funding_confirm, {
+    add_funding_button(input, values)
+    removeModal()
+  })
+
+  # --- EVENTS: Delete Funding Button ---
+  # Delete button pop up
+  output$delete_funding_btn <- renderUI({
+    selected <- input$sample_funding_table_rows_selected
+    if (length(selected) > 0) {
+      actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+    }
+  })
+
+  # Deleting selected funding
+  observeEvent(input$delete_funding, {
+    selected <- input$sample_funding_table_rows_selected
+    values$funding_sources <- delete_row(values$funding_sources, selected)
+  })
+
+  # --- EVENTS: Add Expense Button ---
   # Adding new expense form
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal())
+  })
+
+  observeEvent(input$add_expense_confirm, {
+    add_expense_button(input, values)
+    removeModal()
+  })
+
+  # --- EVENTS: Delete Expense Button ---
+  # Delete button pop up
+  output$delete_expense_btn <- renderUI({
+    selected <- input$sample_expense_table_rows_selected
+    if (length(selected) > 0) {
+      actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+    }
+  })
+
+  # Deleting selected expense
+  observeEvent(input$delete_expense, {
+    selected <- input$sample_expense_table_rows_selected
+    values$expenses <- delete_row(values$expenses, selected)
   })
 
   # Sample table outputs (for viewings only)
@@ -215,8 +280,27 @@ main_server_logic <- function(input, output, session, values) {
   # })
 
   output$sample_funding_table <- renderDT({
-    datatable(values$funding_sources)
-  })
+    
+    datatable(
+      values$funding_sources,
+      options = list(
+        dom = "<'row align-items-center'
+                <'col-sm-6'l>
+                <'col-sm-6 text-end'B>
+              >
+              <'row'<'col-sm-12'f>>
+              t
+              <'row'
+                <'col-sm-5'i>
+                <'col-sm-7'p>
+              >",
+        pageLength = 10,
+        scrollX = TRUE
+      ),
+      rownames = FALSE
+    )
+  }, server = FALSE)
+  
 
   output$sample_expense_table <- renderDT({
     datatable(
@@ -224,21 +308,48 @@ main_server_logic <- function(input, output, session, values) {
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
+        dom = "<'row align-items-center'
+                <'col-sm-6'l>
+                <'col-sm-6 text-end'B>
+              >
+              <'row'<'col-sm-12'f>>
+              t
+              <'row'
+                <'col-sm-5'i>
+                <'col-sm-7'p>
+              >"
       ),
       rownames = FALSE
     )
-  })
+  }, server = FALSE)
 
   output$sample_manual_table <- renderDT({
+    if(!is.null(pending_order())) {
+      df <- pending_order()
+    }
+    else {
+      df <- values$expenses
+    }
     datatable(
-      values$expenses |> select(-old_index),
+      df |> select(-old_index),
       extensions = 'RowReorder',
       selection = 'none',
       callback = JS(row_reorder_callback),
       options = list(
         rowReorder = TRUE,
         pageLength = 100
+      ),
+      rownames = FALSE
+    )
+  })
+  
+  output$sample_priority_table <- renderDT({
+    datatable(
+      values$expenses |> select(-old_index),
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
       ),
       rownames = FALSE
     )
@@ -256,9 +367,6 @@ main_server_logic <- function(input, output, session, values) {
   #   )
   # })
 }
-
-
-
 
 
 
