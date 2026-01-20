@@ -461,15 +461,13 @@ hr {
   padding: 6px 12px;
 }
 
-.add-delete-btn {
-  display: flex;
-  justify-content: flex-end;
+.delete-expense, .delete-funding {
+  margin-bottom: 10px;
 }
 
 .delete-data-btn {
-  background-color: #CACACA;
+  background-color: #FFDCDC;
   border: none;
-  color: #404040;
   border-radius: 15px;
 }
 

@@ -231,12 +231,16 @@ main_server_logic <- function(input, output, session, values) {
 
   # --- EVENTS: Delete Funding Button ---
   # Delete button pop up
-  output$delete_funding_btn <- renderUI({
+  observeEvent(input$sample_funding_table_rows_selected, {
     selected <- input$sample_funding_table_rows_selected
+    
+    removeUI(selector = ".delete-funding *", immediate = TRUE)
+    
     if (length(selected) > 0) {
-      div(
-        class = "add-delete-btn",
-        actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+      insertUI(
+        selector = ".delete-funding",
+        where = "afterBegin",
+        ui = actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
       )
     }
   })
@@ -259,16 +263,20 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # --- EVENTS: Delete Expense Button ---
-  # Delete button pop up
-  output$delete_expense_btn <- renderUI({
+  observeEvent(input$sample_expense_table_rows_selected, {
     selected <- input$sample_expense_table_rows_selected
+    
+    removeUI(selector = ".delete-expense *", immediate = TRUE)
+    
     if (length(selected) > 0) {
-      div(
-        class = "add-delete-btn",
-        actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+      insertUI(
+        selector = ".delete-expense",
+        where = "afterBegin",
+        ui = actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
       )
     }
   })
+  
 
   # Deleting selected expense
   observeEvent(input$delete_expense, {
@@ -290,11 +298,12 @@ main_server_logic <- function(input, output, session, values) {
     datatable(
       values$funding_sources,
       options = list(
-        dom = "<'row align-items-center'
+        dom = "<'row align-items-center mb-2'
                 <'col-sm-6'l>
+                <'col-sm-6 text-end'<'delete-funding'>>
                 <'col-sm-6 text-end'B>
               >
-              <'row'<'col-sm-12'f>>
+              <'row mb-2'<'col-sm-12'f>>
               t
               <'row'
                 <'col-sm-5'i>
@@ -314,11 +323,12 @@ main_server_logic <- function(input, output, session, values) {
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        dom = "<'row align-items-center'
+        dom = "<'row align-items-center mb-2'
                 <'col-sm-6'l>
+                <'col-sm-6 text-end'<'delete-expense'>>
                 <'col-sm-6 text-end'B>
               >
-              <'row'<'col-sm-12'f>>
+              <'row mb-2'<'col-sm-12'f>>
               t
               <'row'
                 <'col-sm-5'i>

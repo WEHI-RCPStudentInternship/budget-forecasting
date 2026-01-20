@@ -22,10 +22,6 @@ expense_ui <- function() {
       
       card(
         div(
-          div(
-            class = "data-table-footer",
-            uiOutput("delete_expense_btn")
-          ),
           DTOutput("sample_expense_table")
         ),
         full_screen = TRUE,
