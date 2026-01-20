@@ -24,7 +24,7 @@ dashboard_ui <- function() {
           
           value_box(
             title = "Number of Shortfalls",
-            total_shortfalls,
+            uiOutput("shortfall_number"),
             "Total number of shortfalls",
             full_screen = FALSE,
             class = "info-box"

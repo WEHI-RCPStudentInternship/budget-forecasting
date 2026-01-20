@@ -113,7 +113,6 @@ create_shortfall_bar <- function() {
   
   total_shortfalls <- tail(monthly_shortfall$NumberOfShortfalls, n = 1)
   
-
   
   shortfall_number_bar <- plot_ly(
     data = monthly_shortfall,
@@ -177,8 +176,11 @@ create_shortfall_bar <- function() {
   p$x$source <- "A"
   p <- event_register(p, "plotly_click")
   
-  return (p)
-  
+  list(
+    shortfall_plot = p,
+    total_shortfalls = total_shortfalls
+  )
+
 }
 
 

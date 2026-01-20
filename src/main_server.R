@@ -378,7 +378,13 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   output$shortfall_plot <- renderPlotly({
-    create_shortfall_bar()
+    shortfall_data <- create_shortfall_bar()
+    shortfall_data$shortfall_plot
+  })
+  
+  output$shortfall_number <- renderUI({
+    shortfall_data <- create_shortfall_bar()
+    shortfall_data$total_shortfalls
   })
   
   
