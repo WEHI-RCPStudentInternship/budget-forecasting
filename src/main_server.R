@@ -366,20 +366,6 @@ main_server_logic <- function(input, output, session, values) {
       plotOutput("circos_plot", height = "400px")
     }
   })
-  
-
-
-  # output$sample_table <- renderDT({
-  #   datatable(
-  #     values$expenses(),
-  #     options = list(
-  #       pageLength = 10,
-  #       scrollY = "300px",
-  #       scrollX = TRUE,
-  #       dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
-  #     )
-  #   )
-  # })
 }
 
 
