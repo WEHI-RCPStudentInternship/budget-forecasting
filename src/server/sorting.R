@@ -91,12 +91,12 @@ main_sorting_expenses <- function(expenses_data,
 }
 
 # --- Manual Row Reordering ---
-row_reorder <- function(newOrder, values, proxy, id_col) {
-  new_idx <- match(newOrder, values$expenses[[id_col]])
-  df <- values$expenses[new_idx, ] |> mutate(priority = seq_len(nrow(values$expenses)))
+row_reorder <- function(newOrder, expenses, proxy, id_col) {
+  new_idx <- match(newOrder, expenses[[id_col]])
+  df <- expenses[new_idx, ] |> mutate(priority = seq_len(nrow(expenses)))
   replaceData(proxy, df, resetPaging = FALSE, rownames = FALSE)
 
-  return(df) 
+  return(df) # Return updated dataframe
 }
 
 row_reorder_callback <- c(

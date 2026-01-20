@@ -19,7 +19,7 @@ add_funding_button <- function(input, values) {
         type = "error",
         duration = 5
       )
-    return(NULL)
+      return(NULL)
     }
   }
 
@@ -46,7 +46,7 @@ add_expense_button <- function(input, values) {
         type = "error",
         duration = 5
       )
-    return(NULL)
+      return(NULL)
     }
   }
 
@@ -56,7 +56,9 @@ add_expense_button <- function(input, values) {
 delete_row <- function(df, selected_rows) {
   if (length(selected_rows) > 0 && all(selected_rows %in% seq_len(nrow(df)))) {
     df <- df[-selected_rows, ]
-    df$priority <- seq_len(nrow(df))
+    if ("priority" %in% names(df)) {
+      df$priority <- seq_len(nrow(df))
+    }
 
     showNotification(
       paste("Deleted", length(selected_rows), "row(s)."),

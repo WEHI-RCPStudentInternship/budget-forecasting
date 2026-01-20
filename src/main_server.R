@@ -69,7 +69,10 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_priority == "Manual Priority") {
       manual_priority_ui()
     } else {
-      pending_order(NULL)
+      if (!is.null(pending_order())) {
+        showNotification("Unsaved manual order discarded", type = "message", duration = 3)
+        pending_order(NULL)
+      }
       column_priority_ui()
     }
   })
@@ -99,7 +102,7 @@ main_server_logic <- function(input, output, session, values) {
     input$drag_categories
   })
 
-  # --- EVENT: MANUAL ROW REORDERING LOGIC ---
+  # --- EVENT: Manual Row Reordering ---
   # Temp order and proxy table
   pending_order <- reactiveVal(NULL)
   proxy <- dataTableProxy("sample_manual_table")
@@ -112,7 +115,7 @@ main_server_logic <- function(input, output, session, values) {
 
   # Save manual order
   observeEvent(input$save_manual_order, {
-    values$expenses <- row_reorder(input$newOrder, values, proxy, id_col = "priority")
+    values$expenses <- row_reorder(input$newOrder, values$expenses, proxy, id_col = "priority")
     pending_order(NULL)
     showNotification("Manual order saved", type = "message", duration = 3)
   })
@@ -137,7 +140,7 @@ main_server_logic <- function(input, output, session, values) {
       values$expenses <- expense_df
       showNotification("Data saved successfully", type = "message", duration = 3)
     }, error = function(e) {
-      showNotification(paste("Upload failed:", e$message), type = "error", duration = NULL)
+      showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
     })
   })
   
