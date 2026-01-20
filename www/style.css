@@ -462,9 +462,11 @@ hr {
 .delete-data-btn {
   background-color: #FFDCDC;
   border: none;
-  border-radius: 15px;
+  border-radius: 10px;
   position: absolute;
   z-index: 10;
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
 .delete-data-btn:hover {
