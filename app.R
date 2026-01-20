@@ -10,7 +10,7 @@ run_setup()
 
 
 # 2. Load packages
-
+library(circlize)
 library(shiny)
 library(bslib)
 library(DT)
