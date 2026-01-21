@@ -140,7 +140,7 @@ column_priority_ui <- function() {
       p("Result Table", class = "card-title"),
       
       div(
-        DTOutput("sample_priority_table"),
+        DTOutput("sample_expense_table"),
         style = "padding: 16px; font-weight: 400; font-size: 16px;"
       )
     )

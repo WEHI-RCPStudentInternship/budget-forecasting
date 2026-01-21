@@ -11,7 +11,7 @@ source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("expense")
+  current_view <- reactiveVal("forecast")
   
   clicked_month <- reactiveVal(NULL)
 
@@ -277,11 +277,35 @@ main_server_logic <- function(input, output, session, values) {
     values$expenses <- delete_row(values$expenses, selected)
   })
 
+  # --- OUTPUT: Data Tables ---
+  display_funding_names <- c(
+    priority = "Priority",
+    source_id = "Source ID",
+    funding_source = "Funding Source",
+    allowed_categories = "Allowed Categories",
+    valid_from = "Valid From",
+    valid_to = "Valid To",
+    amount = "Amount",
+    notes = "Notes"
+  )
+
+  display_expense_names <- c(
+    priority = "Priority",
+    expense_id = "Expense ID",
+    expense_name = "Expense Name",
+    expense_category = "Expense Category",
+    planned_amount = "Planned Amount",
+    latest_payment_date = "Latest Payment Date",
+    notes = "Notes"
+  )
 
   output$sample_funding_table <- renderDT({
-    
+    req(values$funding_sources)
+    df <- values$funding_sources
+    colnames(df) <- display_funding_names[names(df)]
+
     datatable(
-      values$funding_sources,
+      df,
       options = list(
         dom = "<'row align-items-center'
                 <'col-sm-6'l>
@@ -302,8 +326,11 @@ main_server_logic <- function(input, output, session, values) {
   
 
   output$sample_expense_table <- renderDT({
+    req(values$expenses)
+    df <- values$expenses |> select(-old_index)
+    colnames(df) <- display_expense_names[names(df)]
     datatable(
-      values$expenses |> select(-old_index),
+      df,
       options = list(
         pageLength = 10,
         scrollX = TRUE,
@@ -327,33 +354,34 @@ main_server_logic <- function(input, output, session, values) {
       df <- pending_order()
     }
     else {
-      df <- values$expenses
+      df <- values$expenses |> select(-old_index)
     }
+
+    colnames(df) <- display_expense_names[names(df)]
     datatable(
-      df |> select(-old_index),
+      df,
       extensions = 'RowReorder',
       selection = 'none',
       callback = JS(row_reorder_callback),
       options = list(
         rowReorder = TRUE,
-        pageLength = 100
+        pageLength = 100,
+        dom = "<'row align-items-center'
+                <'col-sm-6'l>
+                <'col-sm-6 text-end'B>
+              >
+              <'row'<'col-sm-12'f>>
+              t
+              <'row'
+                <'col-sm-5'i>
+                <'col-sm-7'p>
+              >"
       ),
       rownames = FALSE
     )
   })
-  
-  output$sample_priority_table <- renderDT({
-    datatable(
-      values$expenses |> select(-old_index),
-      options = list(
-        pageLength = 10,
-        scrollX = TRUE,
-        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
-      ),
-      rownames = FALSE
-    )
-  })
-  
+
+  # --- OUTPUT: Dashboard Graphs ---
   output$shortfall_plot <- renderPlotly({
     shortfall_data <- create_shortfall_bar()
     shortfall_data$shortfall_plot
