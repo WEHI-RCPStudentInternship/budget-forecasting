@@ -26,7 +26,7 @@ forecast_ui <- function() {
                   label = NULL,
                   buttonLabel = "Choose File",
                   placeholder = "No file chosen",
-                  accept = c(".xlsx")
+                  accept = c(".xlsx", ".xls")
                 )
               ),
               
@@ -68,7 +68,9 @@ forecast_ui <- function() {
 # Manual Priority View
 manual_priority_ui <- function() {
   div(
-    DTOutput("sample_manual_table"),
+    DTOutput("sample_manual_table"),        
+    actionButton("save_manual_order", "Save order", class = "btn-primary"),
+    actionButton("cancel_manual_order", "Cancel", class = "btn-default"),
     style = "padding: 16px; font-weight: 400; font-size: 16px;"
   )
 }
@@ -138,7 +140,7 @@ column_priority_ui <- function() {
       p("Result Table", class = "card-title"),
       
       div(
-        DTOutput("sample_priority_table"),
+        DTOutput("sample_expense_table"),
         style = "padding: 16px; font-weight: 400; font-size: 16px;"
       )
     )

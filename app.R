@@ -10,7 +10,7 @@ run_setup()
 
 
 # 2. Load packages
-
+library(circlize)
 library(shiny)
 library(bslib)
 library(DT)
@@ -28,8 +28,9 @@ library(sortable)
 library(ggplot2)
 library(plotly)
 
-# library(gurobi)
-library(Matrix)
+
+# library(Matrix)
+
 
 
 # 3. Load UI
@@ -45,6 +46,7 @@ server <- function(input, output, session) {
   values <- reactiveValues(
     funding_sources = data.frame(
       source_id = character(),
+      funding_source = character(),
       allowed_categories = character(),
       valid_from = as.Date(character()),
       valid_to = as.Date(character()),
@@ -53,7 +55,8 @@ server <- function(input, output, session) {
     ),
     expenses = data.frame(
       priority = integer(),
-      item_id = character(),
+      expense_id = character(),
+      expense_name = character(),
       expense_category = character(),
       planned_amount = numeric(),
       latest_payment_date = as.Date(character()),

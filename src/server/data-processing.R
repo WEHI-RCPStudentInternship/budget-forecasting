@@ -14,41 +14,13 @@ read_excel_data <- function(file_path, sheet_name) {
 
 
   funding_sources_df <- read_excel(file_path, sheet = "Funding") %>%
-    #data_validation() %>%
     process_funding_data()
 
   expense_df <- read_excel(file_path, sheet = "Expense") %>%
-    #data_validation() %>%
     process_expense_data()
 
   showNotification("Data uploaded successfully.", type = "message", duration = 5)
   return(list(funding_sources = funding_sources_df, expense = expense_df))
-}
-
-data_validation <- function(df) {
-  # Validate the data frame for required columns and data types
-  #
-  # Arguments:
-  # df: data frame to validate
-  #
-  # Returns:
-  # is_valid: Boolean indicating if the data frame is valid
-
-  if ("Funding" %in% df$sheet_name) {
-    required_columns <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
-  } else if ("Expense" %in% df$sheet_name) {
-    required_columns <- c("item_id", "expense_category", "planned_amount", "latest_payment_date")
-  } else {
-    return(FALSE)
-  }
-
-  is_valid <- all(required_columns %in% names(df))
-  if (!is_valid) {
-    showNotification("Data validation failed: missing required columns.", type = "error", duration = NULL)
-    stop("Data validation failed.")
-    return(FALSE)
-  }
-  return(df)
 }
 
 process_funding_data <- function(df) {
@@ -66,8 +38,8 @@ process_funding_data <- function(df) {
   # - amount: Numeric
 
   funding_sources_df <- df %>%
-    select(`Source ID`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
-    setNames(nm = c("source_id", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
+    select(`Source ID`, `Funding Source`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
+    setNames(nm = c("source_id", "funding_source", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
 
     # Convert data types
     mutate(
@@ -97,28 +69,28 @@ process_expense_data <- function(df) {
   # expense_df: processed expense data frame
   # 
   # Dataframe structure:
-  # - item_id: Character
+  # - expense_id: Character
   # - expense_category: Character
   # - planned_amount: Numeric
   # - latest_payment_date: Date
   
 
   expense_df <- df %>%
-    select(`Priority`,`Item ID`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
-    setNames(nm = c("priority", "item_id", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
+    select(`Priority`, `Expense ID`, `Expense Name`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
+    setNames(nm = c("priority", "expense_id", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
 
     # Convert data types
     mutate(
       latest_payment_date = as.Date(latest_payment_date),
       planned_amount = as.numeric(planned_amount),
-      item_id = as.character(item_id)
+      expense_id = as.character(expense_id)
     ) %>%
 
     # Add index
     mutate(old_index = row_number()) %>%
 
-    # Remove rows with NA in item_id
-    filter(!is.na(item_id))
+    # Remove rows with NA in expense_id
+    filter(!is.na(expense_id))
     
   return(expense_df)
 }

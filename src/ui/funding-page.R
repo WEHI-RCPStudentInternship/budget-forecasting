@@ -22,6 +22,10 @@ funding_ui <- function() {
       
       card(
         div(
+          div(
+            class = "delete-funding",
+            actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+          ),
           DTOutput("sample_funding_table")
         ),
         full_screen = TRUE,
