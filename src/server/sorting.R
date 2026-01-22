@@ -13,33 +13,6 @@ main_sorting_expenses <- function(expenses_data,
                                   # manual_order = NULL,     # Dataframe representing user's drag-and-drop order (for manual mode)
                                   ordering_rules = NULL) { # List representing user's sorting rules (for by_rules mode)
 
-  # =========================================================
-  # Debug information print
-  # =========================================================
-  cat("\n--- [Sorting Debug Info] ---\n")
-  cat("Current Mode:", ifelse(is.null(mode), "NULL", mode), "\n")
-  
-  if (!is.null(ordering_rules)) {
-    cat("Rule 1 (P1):", ordering_rules$p1_item, "\n")
-    cat("Rule 2 (P2):", ordering_rules$p2_item, "\n")
-    
-    # Print date sorting direction
-    if ("Payment Date" %in% c(ordering_rules$p1_item, ordering_rules$p2_item)) {
-      date_dir_text <- if(isTruthy(ordering_rules$p1_date_dir) && ordering_rules$p1_date_dir == "latest_payment_date") {
-        "Latest -> Earliest (Descending)"
-      } else {
-        "Earliest -> Latest (Ascending)"
-      }
-      cat("Date Direction:", date_dir_text, "\n")
-    }
-    
-    # Print category drag-and-drop order
-    if (!is.null(ordering_rules$category_order)) {
-      cat("Category Drag Order:", paste(ordering_rules$category_order, collapse = " > "), "\n")
-    }
-  }
-  cat("----------------------------\n\n")
-
   # ---------------------------------------------------------
   # 1. Column Sorting
   # ---------------------------------------------------------
@@ -115,26 +88,7 @@ main_sorting_expenses <- function(expenses_data,
       mutate(priority = row_number())
     return(expenses_sorted)
   }
-  # =========================================================
-  # Print a snapshot of the sorted results
-  # =========================================================
-  cat("\n>>> [Sorting Result Preview] <<<\n")
-  if (nrow(expenses_sorted) > 0) {
-    # Select key columns to display
-    preview_df <- expenses_sorted %>%
-      select(priority, expense_id, expense_category, latest_payment_date) %>%
-      head(10) # Print the first 10 rows
-    
-    print(preview_df)
-    
-    if (nrow(expenses_sorted) > 10) {
-      cat("... (and", nrow(expenses_sorted) - 10, "more rows)\n")
-    }
-  } else {
-    cat("Warning: No sorted data to display.\n")
-  }
-  cat("================================\n\n")
-  
+
   return(expenses_sorted)
 }
 

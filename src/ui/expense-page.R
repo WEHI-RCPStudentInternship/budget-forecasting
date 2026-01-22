@@ -49,6 +49,19 @@ upload_expense_modal <- function(categories) {
     
       div(
         id = "expense-form",
+
+        # Expense Name
+        div(
+          id = "expense-name",
+          class = "elongated-input",
+          div("Expense Name", class = "data-input-headers"),
+          textInput(
+            "expense_name_input",
+            label = NULL,
+            value = "",
+            placeholder = "Enter expense name..."
+          )
+        ),
         
         # Expense Categories
         div(
@@ -105,7 +118,6 @@ upload_expense_modal <- function(categories) {
           class = "elongated-input",
           
           div("Note", class = "data-input-headers"),
-          
           textInput(
             "expense_note",
             label = NULL,
@@ -117,7 +129,6 @@ upload_expense_modal <- function(categories) {
     class = "add-expense-popup"
   )
 }
-
 
 
 
