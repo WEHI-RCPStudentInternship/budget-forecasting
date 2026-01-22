@@ -87,7 +87,7 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_first_priority_item == "Payment Date") {
       payment_date_view()
     } else {
-      categories_view()
+      categories_view(categories = available_categories())
     }
   })
 
@@ -96,7 +96,7 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_second_priority_item == "Payment Date") {
       payment_date_view()
     } else if (input$select_second_priority_item == "Categories") {
-      categories_view()
+      categories_view(categories = available_categories())
     } else if (input$select_second_priority_item == "None") {
       div("No second priority.", class = "no-second-priority")
     }

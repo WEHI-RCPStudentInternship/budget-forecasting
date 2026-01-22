@@ -24,7 +24,7 @@ funding_ui <- function() {
         div(
           div(
             class = "delete-funding",
-            actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+            actionButton("delete_funding", "Delete Selected Row(s)", class = "delete-data-btn")
           ),
           DTOutput("sample_funding_table")
         ),

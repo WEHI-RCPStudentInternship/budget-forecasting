@@ -24,7 +24,7 @@ expense_ui <- function() {
         div(
           div(
             class = "delete-expense",
-            actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+            actionButton("delete_expense", "Delete Selected Row(s)", class = "delete-data-btn")
           ),
           DTOutput("sample_expense_table")
         ),
