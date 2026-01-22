@@ -234,16 +234,26 @@ main_server_logic <- function(input, output, session, values) {
     # - Connect 'ordering_rules' to the UI ordering rules drag-and-drop
     # ----------------------------
   })
-  
-  observe({
-    print(str(input$spreadsheet_upload))
+
+  # --- Get available funding categories ---
+  available_categories <- reactive({
+    exp_cats <- unique(values$expenses$expense_category)
+    fund_cats <- character()
+    allowed_categories <- values$funding_sources$allowed_categories
+    if (is.list(allowed_categories)) {
+      fund_cats <- unlist(allowed_categories)
+    } else {
+      fund_cats <- allowed_categories
+    }
+
+    sort(unique(c(exp_cats, fund_cats)))
   })
-  
+
 
   # --- EVENTS: Add Funding Button ---
   # Adding new funding form
   observeEvent(input$add_funding, {
-    showModal(upload_funding_modal())
+    showModal(upload_funding_modal(categories = available_categories()))
   })
 
   observeEvent(input$add_funding_confirm, {
@@ -258,11 +268,10 @@ main_server_logic <- function(input, output, session, values) {
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
   
-
   # --- EVENTS: Add Expense Button ---
   # Adding new expense form
   observeEvent(input$add_expense, {
-    showModal(upload_expense_modal())
+    showModal(upload_expense_modal(categories = available_categories()))
   })
 
   observeEvent(input$add_expense_confirm, {
@@ -397,7 +406,6 @@ main_server_logic <- function(input, output, session, values) {
     clicked_bar <- event_data("plotly_click")
     req(clicked_bar)
     clicked_month(clicked_bar$x)
-    print(clicked_month())
   })
   
   output$circos_container <- renderUI({

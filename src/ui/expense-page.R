@@ -37,7 +37,7 @@ expense_ui <- function() {
   )
 }
 
-upload_expense_modal <- function() {  
+upload_expense_modal <- function(categories) {  
   tagAppendAttributes(
     modalDialog(
       title = div(
@@ -60,11 +60,12 @@ upload_expense_modal <- function() {
             selectizeInput(
               "expense_type",
               label = NULL,
-              choices = list("Salary", "Travel"),
+              choices = categories,
               multiple = FALSE,
               options = list(
+                create = TRUE,
                 placeholder = "Select expense type...",
-                onInitialize = I('function() { this.setValue(""); }')
+                openOnFocus = TRUE
               )
             )
           )
