@@ -14,6 +14,8 @@ main_server_logic <- function(input, output, session, values) {
   current_view <- reactiveVal("forecast")
   
   clicked_month <- reactiveVal(NULL)
+  
+  values$expenses_backup <- NULL
 
 
   # --- EVENTS: Navigation between tabs ---
@@ -101,6 +103,37 @@ main_server_logic <- function(input, output, session, values) {
       div("No second priority.", class = "no-second-priority")
     }
   })
+  
+  # --- EVENT: Mutual Exclusion for Priority Dropdowns ---
+  observeEvent(input$select_first_priority_item, {
+    # 1. Get the current value of the 1st Priority
+    p1_val <- input$select_first_priority_item
+    
+    # 2. Define all available choices for the 2nd Priority
+    p2_choices <- c("Payment Date", "Categories", "None")
+    
+    # 3. Identify the item to disable (the one already selected in P1)
+    disabled_choices <- p2_choices[p2_choices == p1_val]
+    
+    # 4. Update the 2nd Priority pickerInput state态
+    updatePickerInput(
+      session = session,
+      inputId = "select_second_priority_item",
+      choices = p2_choices,
+      choicesOpt = list(
+        # Disable the item selected in P1
+        disabled = p2_choices %in% disabled_choices,
+        # Make the disabled option appear gray
+        style = ifelse(p2_choices %in% disabled_choices, 
+                       "color: rgba(0,0,0,0.3); background: #f8f9fa;", "")
+      )
+    )
+    
+    # 5. Safety Check: If P2 was already set to the newly disabled item, reset it to "None"
+    if (input$select_second_priority_item == p1_val) {
+      updatePickerInput(session, "select_second_priority_item", selected = "None")
+    }
+  })
 
   # Dragging feature for categories priority
   observeEvent(input$drag_categories, {
@@ -160,24 +193,18 @@ main_server_logic <- function(input, output, session, values) {
       showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
     })
   })
-  
-  
-
-  # ----------------------------
-  # SORTING LOGIC
-  # This section handles sorting of expenses based on user selection:
-  # - Manual sorting (drag-and-drop order from UI)
-  # - Sort by column (user-defined criteria and category order)
-  # The output 'values$expenses_sorted' includes final order column
-  # and will be used as input for the allocation algorithm
-  # ----------------------------
 
 
-  # ----------------------------
-  # New logic for column sorting 0120
-  # ----------------------------
+
+  # --- EVENT: Logic for column sorting ---
   # 1.Dynamically generate the sorting rules list
   current_ordering_rules <- reactive({
+    # Ensure UI is initialized
+    req(input$select_first_priority_item)
+    
+    # Global categories order fallback
+    actual_category_order <- if (is.null(input$drag_categories)) categories else input$drag_categories
+    
     list(
       p1_item        = input$select_first_priority_item,
       p1_date_dir    = input$`payment-date-options`, 
@@ -186,32 +213,18 @@ main_server_logic <- function(input, output, session, values) {
       category_order = input$drag_categories
     )
   })
-
   
 
   observe({
-    # Debug print
-    cat("\n[Server Signal] Observer Triggered! Mode:", input$select_priority, "\n")
     
+    # Do not proceed if no data is loaded
+    req(values$expenses)
+    req(nrow(values$expenses) > 0)
     # Get current rules
     rules <- current_ordering_rules()
     
     # Retrieve data
-    data_to_sort <- if(!is.null(values$expenses) && nrow(values$expenses) > 0) {
-      values$expenses
-    } else {
-      # mock data
-      data.frame(
-        priority = 1:5,
-        expense_id = c("EXP001", "EXP002", "EXP003", "EXP004", "EXP005"),
-        expense_name = c("Staff A", "Trip", "Staff B", "Laptop", "Snacks"),
-        expense_category = c("Salary", "Travel", "Salary", "Equipment", "Cheese"),
-        planned_amount = c(5000, 200, 4500, 1200, 50),
-        latest_payment_date = as.Date(c("2024-03-01", "2024-01-15", "2024-02-10", "2024-01-15", "2024-03-15")),
-        notes = c("", "Conf. in Sydney", "Monthly", "Laptop", "Kitchen"),
-        stringsAsFactors = FALSE
-      )
-    }
+    data_to_sort <- values$expenses
     
     # Decide the mode based on the user’s selection
     target_mode <- if(isTruthy(input$select_priority) && input$select_priority == "Column Priority") "by_rules" else "manual"
@@ -239,10 +252,6 @@ main_server_logic <- function(input, output, session, values) {
     ignoreNULL = FALSE
   )
 
-  observe({
-    print(str(input$spreadsheet_upload))
-  })
-  
 
 
   # --- EVENTS: Add Funding Button ---
