@@ -14,7 +14,7 @@ main_sorting_expenses <- function(expenses_data,
                                   ordering_rules = NULL) { # List representing user's sorting rules (for by_rules mode)
 
   # =========================================================
-  # 调试信息打印 (Console Logging)
+  # Debug information print
   # =========================================================
   cat("\n--- [Sorting Debug Info] ---\n")
   cat("Current Mode:", ifelse(is.null(mode), "NULL", mode), "\n")
@@ -23,32 +23,23 @@ main_sorting_expenses <- function(expenses_data,
     cat("Rule 1 (P1):", ordering_rules$p1_item, "\n")
     cat("Rule 2 (P2):", ordering_rules$p2_item, "\n")
     
-    # 打印日期排序方向
+    # Print date sorting direction
     if ("Payment Date" %in% c(ordering_rules$p1_item, ordering_rules$p2_item)) {
       date_dir_text <- if(isTruthy(ordering_rules$p1_date_dir) && ordering_rules$p1_date_dir == "latest_payment_date") {
-        "Latest -> Earliest (降序)"
+        "Latest -> Earliest (Descending)"
       } else {
-        "Earliest -> Latest (升序)"
+        "Earliest -> Latest (Ascending)"
       }
       cat("Date Direction:", date_dir_text, "\n")
     }
     
-    # 打印分类拖拽顺序
+    # Print category drag-and-drop order
     if (!is.null(ordering_rules$category_order)) {
       cat("Category Drag Order:", paste(ordering_rules$category_order, collapse = " > "), "\n")
     }
   }
   cat("----------------------------\n\n")
-    
-    # Convert category column to factor based on user-defined order
-    # This ensures that the 'category' column will be sorted according to the order specified by the user.
-    # Example:
-    #   Suppose expenses_data$category = c("travel", "salary", "research")
-    #   and ordering_rules$category_order = c("salary", "travel", "research")
-    #   After conversion:
-    #     factor levels are: salary < travel < research
-    #   So when we sort, rows with 'salary' will come first, then 'travel', then 'research'.
-    
+
   # ---------------------------------------------------------
   # 1. Column Sorting
   # ---------------------------------------------------------
@@ -58,8 +49,9 @@ main_sorting_expenses <- function(expenses_data,
       stop("By_rules mode selected but ordering_rules is NULL")
     }
     
-    # A. 体现用户在页面上拖拽分类方块形成的顺序
-    # 将 expense_category 转为 factor，levels 的顺序就是用户期望的先后顺序
+    # A. Reflect the order of category blocks dragged by the user on the page
+    # Convert `expense_category` to a factor; the order of `levels` represents the user's desired sequence
+    
     if (!is.null(ordering_rules$category_order)) {
       expenses_data <- expenses_data %>%
         mutate(expense_category = factor(
@@ -68,71 +60,70 @@ main_sorting_expenses <- function(expenses_data,
         ))
     }
     
-    # B. 定义映射函数：根据项目类型决定排序表达式
-    # 逻辑：如果是Categories看拖拽顺序；如果是Date看earliest/latest方向
+    # B. Define a mapping function: determine the sorting expression based on the project type
+    # Logic: if it's Categories, use the drag-and-drop order; if it's Date, use the earliest/latest direction
+    
     get_sort_expression <- function(p_item, p_date_dir) {
       if (is.null(p_item) || p_item == "None") return(NULL)
       
       if (p_item == "Categories") {
-        # 直接按上面 mutate 好的 factor 顺序排
+        # Sort directly according to the factor order set by mutate
         return(expr(expense_category))
       } 
       
       if (p_item == "Payment Date") {
-        # 根据方向参数决定升序或降序
+        # Determine ascending or descending order based on the direction parameter
         if (!is.null(p_date_dir) && p_date_dir == "latest_payment_date") {
-          return(expr(desc(latest_payment_date))) # 大的（晚的）在前
+          return(expr(desc(latest_payment_date)))
         } else {
-          return(expr(latest_payment_date))       # 小的（早的）在前
+          return(expr(latest_payment_date))
         }
       }
       return(NULL)
     }
     
-    # C. 构建多级排序列表
+    # C. Construct a multi-level sorting list
     sort_list <- list()
     
-    # 1st Priority: 第一优先级
+    # 1st Priority
     p1_expr <- get_sort_expression(ordering_rules$p1_item, ordering_rules$p1_date_dir)
     if (!is.null(p1_expr)) sort_list[[length(sort_list) + 1]] <- p1_expr
     
-    # 2nd Priority: 第二优先级
+    # 2nd Priority
     p2_expr <- get_sort_expression(ordering_rules$p2_item, ordering_rules$p2_date_dir)
     if (!is.null(p2_expr)) sort_list[[length(sort_list) + 1]] <- p2_expr
     
-    # D. 特殊情形处理 (Tie-breaker)
-    # 当 payment date 和 categories 相同时，这样当规则相同时，会保持当前的相对先后顺序
+    # D. Tie-breaker
+    # When payment date and categories are the same, this preserves the current relative order when rules are equal
     sort_list[[length(sort_list) + 1]] <- expr(priority)
     
-    # E. 执行排序并重写序号
-    # 使用 !!! 将列表中的表达式解包给 arrange 函数
+    # E. Perform the sorting and rewrite the indices
+    # Use !!! to unquote the expressions in the list for the arrange function
     expenses_sorted <- expenses_data %>%
       arrange(!!!sort_list) %>%
-      mutate(priority = row_number()) # 新序号替换原来的费用序号
+      mutate(priority = row_number())
     
     # return(expenses_sorted)
     
   } 
   
   # ---------------------------------------------------------
-  # 2. 手动排序模式 (Manual Sorting)
+  # 2. Manual Sorting
   # ---------------------------------------------------------
   else if (mode == "manual") {
-    # 手动模式下，行顺序已经在 UI/Server 交互中排好了
-    # 这里只负责重写 priority 序号
     expenses_sorted <- expenses_data %>%
       mutate(priority = row_number())
     return(expenses_sorted)
   }
   # =========================================================
-  # 打印排序后的结果快照
+  # Print a snapshot of the sorted results
   # =========================================================
   cat("\n>>> [Sorting Result Preview] <<<\n")
   if (nrow(expenses_sorted) > 0) {
-    # 选择关键列进行展示，方便对比
+    # Select key columns to display
     preview_df <- expenses_sorted %>%
-      select(priority, item_id, expense_category, latest_payment_date) %>%
-      head(10) # 打印前10行
+      select(priority, expense_id, expense_category, latest_payment_date) %>%
+      head(10) # Print the first 10 rows
     
     print(preview_df)
     

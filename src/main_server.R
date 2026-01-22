@@ -203,7 +203,8 @@ main_server_logic <- function(input, output, session, values) {
       # mock data
       data.frame(
         priority = 1:5,
-        item_id = c("EXP001", "EXP002", "EXP003", "EXP004", "EXP005"),
+        expense_id = c("EXP001", "EXP002", "EXP003", "EXP004", "EXP005"),
+        expense_name = c("Staff A", "Trip", "Staff B", "Laptop", "Snacks"),
         expense_category = c("Salary", "Travel", "Salary", "Equipment", "Cheese"),
         planned_amount = c(5000, 200, 4500, 1200, 50),
         latest_payment_date = as.Date(c("2024-03-01", "2024-01-15", "2024-02-10", "2024-01-15", "2024-03-15")),
