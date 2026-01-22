@@ -11,7 +11,7 @@ source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("dashboard")
   
   clicked_month <- reactiveVal(NULL)
 
