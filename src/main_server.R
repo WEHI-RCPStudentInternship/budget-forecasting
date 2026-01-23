@@ -8,6 +8,7 @@ source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
 source("src/server/edit-rows.R")
+source("src/server/testing.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
@@ -374,7 +375,8 @@ main_server_logic <- function(input, output, session, values) {
   circos_month <- reactive({
     cm <- clicked_month()
     req(cm)
-    create_circos_plot(month = cm)
+    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+    create_circos_plot(month = cutoff)
   })
   
   output$circos_plot <- renderChorddiag({
@@ -383,7 +385,6 @@ main_server_logic <- function(input, output, session, values) {
   
   output$circos_container <- renderUI({
     cm <- clicked_month()
-    print(cm)
 
     if (is.null(cm)) {
       tags$p("Click on a month to see the chord diagram.")

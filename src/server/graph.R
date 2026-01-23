@@ -304,27 +304,33 @@ allocation_df <- data.frame(
   stringsAsFactors = FALSE
 )
 
-rows_until_month <- allocation_df %>%
-  filter(LatestPaymentDate <= "2025-03-01")
-
 
 create_circos_plot <- function(month) {
+  print(month)
   
   sources_ids <- unique(funding$ID)
   expenses_ids <- unique(expense_ordered$ID)
   sectors <- c(sources_ids, expenses_ids)
   
+  rows_until_month <- allocation_df %>%
+    filter(LatestPaymentDate < month)
+  print(rows_until_month)
+  
+  if (nrow(rows_until_month) == 0) {
+    return (htmltools::tags$div("No allocation this month."))
+  }
+  
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors
   colnames(mat) <- sectors
   
-  # rows_until_month <- allocation_df %>%
-  #   filter(LatestPaymentDate <= month)
-  
-  for (i in 1:nrow(df_allocations)) {
-    mat[df_allocations$SourceID[i], df_allocations$ExpenseID[i]] <- df_allocations$AllocatedAmount[i]
+  # allocating to expenses
+  for (i in 1:nrow(rows_until_month)) {
+    mat[rows_until_month$SourceID[i], rows_until_month$ExpenseID[i]] <- rows_until_month$AllocatedAmount[i]
   }
+  print(mat)
   
+  # leftover funding self-links
   for (i in 1:nrow(after_allocation_funding)) {
     mat[after_allocation_funding$SourceID[i], after_allocation_funding$SourceID[i]] <- after_allocation_funding$RemainingAmount[i]
   }
