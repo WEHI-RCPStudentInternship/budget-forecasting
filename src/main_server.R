@@ -8,10 +8,11 @@ source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
 source("src/server/edit-rows.R")
+source("src/server/testing.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("dashboard")
   
   clicked_month <- reactiveVal(NULL)
   
@@ -177,7 +178,7 @@ main_server_logic <- function(input, output, session, values) {
   observeEvent(input$spreadsheet_upload, {
     req(input$spreadsheet_upload)
     path <- input$spreadsheet_upload$datapath
-    
+
     tryCatch({
       data_list <- read_excel_data(path)
       funding_sources_df <- data_list$funding_sources
@@ -405,15 +406,28 @@ main_server_logic <- function(input, output, session, values) {
     clicked_month(clicked_bar$x)
   })
   
+  circos_month <- reactive({
+    cm <- clicked_month()
+    req(cm)
+    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+    create_circos_plot(month = cutoff)
+  })
+  
+  output$circos_plot <- renderChorddiag({
+    circos_month()
+  })
+  
   output$circos_container <- renderUI({
     cm <- clicked_month()
-    
+
     if (is.null(cm)) {
-      tags$p("click on a month to see circos plot")
+      tags$p("Click on a month to see the chord diagram.")
     } else {
-      plotOutput("circos_plot", height = "400px")
+      chorddiagOutput("circos_plot", height = "100%")
     }
   })
+  
+  
 }
 
 
