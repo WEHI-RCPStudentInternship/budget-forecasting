@@ -8,6 +8,7 @@ library(ompr)
 library(ompr.roi)
 library(ROI)
 library(ROI.plugin.highs)
+library(dplyr)
 
 
 ## ---------------------------------------------------------------------------------------------

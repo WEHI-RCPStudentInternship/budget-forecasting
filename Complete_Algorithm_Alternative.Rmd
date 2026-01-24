@@ -215,7 +215,7 @@ apply_greedy_fill <- function(result, sources, expenses, compatibility) {
       if (amount_needed < 1e-6) break 
       
       # Check compatibility AND available funds
-      if (compatibility[i, j] == 1 && source_remaining[i] > 1e-6) {
+      if (source_remaining[i] > 1e-6) {
         take_amount <- min(amount_needed, source_remaining[i])
      
         # Update Matrix & Balances

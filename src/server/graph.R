@@ -328,7 +328,6 @@ create_circos_plot <- function(month) {
   for (i in 1:nrow(rows_until_month)) {
     mat[rows_until_month$SourceID[i], rows_until_month$ExpenseID[i]] <- rows_until_month$AllocatedAmount[i]
   }
-  print(mat)
   
   # leftover funding self-links
   for (i in 1:nrow(after_allocation_funding)) {
