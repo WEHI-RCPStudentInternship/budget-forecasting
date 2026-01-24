@@ -19,9 +19,6 @@ main_server_logic <- function(input, output, session, values) {
   # --- Data Validation ---
   observe({
     correct_format_data <- data_validation(values)
-    if (correct_format_data == TRUE){
-      showNotification("Data validation passed", type = "message", duration = 3)
-    }
   }) %>%
     bindEvent(
       values$funding_sources,
