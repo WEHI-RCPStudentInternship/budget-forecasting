@@ -147,11 +147,11 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # Dragging feature for categories priority
+  drag_order <- reactiveVal(NULL)
   observeEvent(input$drag_categories, {
-    input$drag_categories
+    drag_order(input$drag_categories)
   })
 
-  # --- Get available funding categories ---
   available_categories <- reactive({
     # expenses categories (safe)
     exp_cats <- character(0)
@@ -181,8 +181,17 @@ main_server_logic <- function(input, output, session, values) {
     }
 
     # combine, dedupe, sort
-    cats <- unique(c(exp_cats, fund_cats))
-    sort(cats)
+    cats <- sort(unique(c(exp_cats, fund_cats)))
+    
+    dr <- drag_order()
+    if (!is.null(dr)) {
+      # Preserve user-defined order
+      dr_filtered <- dr[dr %in% cats]
+      extras <- setdiff(cats, dr_filtered)
+      c(dr_filtered, sort(extras))
+    } else {
+      cats
+    }
   })
 
   # --- EVENT: Manual Row Reordering ---
@@ -247,15 +256,14 @@ main_server_logic <- function(input, output, session, values) {
     # Ensure UI is initialized
     req(input$select_first_priority_item)
     
-    # Global categories order fallback
-    actual_category_order <- if (is.null(input$drag_categories)) categories else input$drag_categories
+    category_order <- if (!is.null(drag_order())) drag_order() else available_categories()
     
     list(
-      p1_item        = input$select_first_priority_item,
-      p1_date_dir    = input$`payment-date-options`, 
-      p2_item        = input$select_second_priority_item,
-      p2_date_dir    = input$`payment-date-options`, 
-      category_order = input$drag_categories
+      p1_item = input$select_first_priority_item,
+      p1_date_dir = input$`payment-date-options`,
+      p2_item = input$select_second_priority_item,
+      p2_date_dir = input$`payment-date-options`,
+      category_order = category_order
     )
   })
   
