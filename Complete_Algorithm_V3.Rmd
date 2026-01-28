@@ -420,5 +420,5 @@ df_funds_summary
 ```
 
 ```{r}
-# knitr::purl(input = "Complete_Algorithm_Alternative.Rmd", output = "Complete_Algorithm_Alternative.R")
+knitr::purl(input = "Complete_Algorithm_Alternative.Rmd", output = "Complete_Algorithm_Alternative_V3.R")
 ```

@@ -1,12 +1,3 @@
-
-# ----------------------------------------------------
-#
-#  Allocation Algorithm V3: allows for overdue payment
-#
-# ----------------------------------------------------
-
-
-
 ## ----setup, include=FALSE------------------------
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -63,31 +54,31 @@ date_to_int <- function(date_str, base_date) {
 #            "15/07/2025", "20/07/2025", "15/09/2025", "20/10/2025", "10/11/2025")
 # )
 
-# # Funding Source
-# sources <- data.frame(
-#   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007"),
-#   Categories = I(list(
-#     c("Salary"),
-#     c("Equipment"),
-#     c("Travel"),
-#     c("Salary"),
-#     c("Equipment"),
-#     c("Travel"),
-#     c("Equipment")
-#   )),
-#   ValidFrom = c("01/01/2025", "01/02/2025", "01/04/2025", "01/05/2025", "01/07/2025", "01/01/2025", "01/10/2025"),
-#   ValidTo   = c("31/03/2025", "30/06/2025", "30/09/2025", "31/12/2025", "31/12/2025", "31/12/2025", "31/12/2025"),
-#   Amount = c(12000, 18000, 10000, 30000, 15000, 8000, 9000)
-# )
-# 
-# # Expense
-# expenses <- data.frame(
-#   ID = c("E001","E002","E003","E004","E005","E006","E007","E008","E009","E010"),
-#   Category = c("Salary","Equipment","Salary","Travel","Equipment","Salary","Travel","Equipment","Salary","Travel"),
-#   Amount = c(9000, 40000, 8000, 6000, 15000, 20000, 7000, 9000, 12000, 5000),
-#   Date = c("15/01/2025","20/02/2025","10/03/2025","05/04/2025","15/05/2025",
-#            "10/06/2025","20/07/2025","30/08/2025","01/10/2025","15/11/2025")
-# )
+# Funding Source
+sources <- data.frame(
+  ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007"),
+  Categories = I(list(
+    c("Salary"),
+    c("Equipment"),
+    c("Travel"),
+    c("Salary"),
+    c("Equipment"),
+    c("Travel"),
+    c("Equipment")
+  )),
+  ValidFrom = c("01/01/2025", "01/02/2025", "01/04/2025", "01/05/2025", "01/07/2025", "01/01/2025", "01/10/2025"),
+  ValidTo   = c("31/03/2025", "30/06/2025", "30/09/2025", "31/12/2025", "31/12/2025", "31/12/2025", "31/12/2025"),
+  Amount = c(12000, 18000, 10000, 30000, 15000, 8000, 9000)
+)
+
+# Expense
+expenses <- data.frame(
+  ID = c("E001","E002","E003","E004","E005","E006","E007","E008","E009","E010"),
+  Category = c("Salary","Equipment","Salary","Travel","Equipment","Salary","Travel","Equipment","Salary","Travel"),
+  Amount = c(9000, 40000, 8000, 6000, 15000, 20000, 7000, 9000, 12000, 5000),
+  Date = c("15/01/2025","20/02/2025","10/03/2025","05/04/2025","15/05/2025",
+           "10/06/2025","20/07/2025","30/08/2025","01/10/2025","15/11/2025")
+)
 
 
 
@@ -211,7 +202,7 @@ apply_greedy_fill <- function(result, sources, expenses, compatibility) {
       # Check compatibility AND available funds
       if (source_remaining[i] > 1e-6) {
         take_amount <- min(amount_needed, source_remaining[i])
-        
+     
         # Update Matrix & Balances
         mat_x[i, j] <- mat_x[i, j] + take_amount
         source_remaining[i] <- source_remaining[i] - take_amount
@@ -333,7 +324,7 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   
   # Add a readable Status column
   df_expenses_status$Status <- ifelse(df_expenses_status$IsFilled, "Full",
-                                      ifelse(df_expenses_status$FilledAmount > 1e-6, "Partial", "Unfunded"))
+                               ifelse(df_expenses_status$FilledAmount > 1e-6, "Partial", "Unfunded"))
   
   
   # --- 3. Funds Summary DataFrame ---
@@ -358,29 +349,24 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
 }
 
 
-activate_allocation_algorithm <- function(sources, expenses) {
-  ## ------------------------------------------------
-  if (result$status == "optimal" || result$status == "success") {
-    
-    # Partial fill
-    final_matrix <- apply_greedy_fill(result, sources, expenses, compatibility)
-    
-    # Print report in R
-    print_financial_report(final_matrix, sources, expenses)
-    
-    # Generate DataFrames
-    dfs <- create_financial_dfs(final_matrix, sources, expenses)
-    
-    df_allocations <- dfs$allocations
-    df_expenses_status <- dfs$expenses
-    df_funds_summary <- dfs$funds
-    
-  } else {
-    cat("No optimal solution found.\n")
-    return (NULL)
-  }
+## ------------------------------------------------
+if (result$status == "optimal" || result$status == "success") {
   
-  return (dfs)
+  # Partial fill
+  final_matrix <- apply_greedy_fill(result, sources, expenses, compatibility)
+  
+  # Print report in R
+  print_financial_report(final_matrix, sources, expenses)
+  
+  # Generate DataFrames
+  dfs <- create_financial_dfs(final_matrix, sources, expenses)
+  
+  df_allocations <- dfs$allocations
+  df_expenses_status <- dfs$expenses
+  df_funds_summary <- dfs$funds
+  
+} else {
+  cat("No optimal solution found.\n")
 }
 
 
@@ -408,3 +394,4 @@ df_funds_summary
 
 ## ------------------------------------------------
 # knitr::purl(input = "Complete_Algorithm_Alternative.Rmd", output = "Complete_Algorithm_Alternative.R")
+

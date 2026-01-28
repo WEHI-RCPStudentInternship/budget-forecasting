@@ -6,6 +6,7 @@ source("requirements/packages.R")
 
 # 1. Installing packages
 
+options(shiny.launch.browser = TRUE)
 run_setup()
 
 
@@ -61,20 +62,16 @@ server <- function(input, output, session) {
       notes = character()
     ),
     allocation_result = data.frame(
-      expense_id = character(),
-      source_id = character(),
-      expense_category = character(),
-      expense_amount = numeric(),
-      allocated_amount = numeric(),
-      latest_payment_date = as.Date(character()),
-      allocation_status = logical()
+      SourceID = character(),
+      ExpenseID = character(),
+      ExpenseCategory = character(),
+      AllocatedAmount = numeric()
     ),
     funding_summary = data.frame(
-      source_id = character(),
-      funding_source = character(),
-      initial_amount = numeric(),
-      used_amount = numeric(),
-      remaining_amount = numeric()
+      SourceID = character(),
+      InitialAmount = numeric(),
+      UsedAmount = numeric(),
+      RemainingAmount = numeric()
     )
   )
   

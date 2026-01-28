@@ -433,16 +433,29 @@ main_server_logic <- function(input, output, session, values) {
       rownames = FALSE
     )
   })
+  
+  # --- EVENT: Activating Forecasting Button ---
+  observeEvent(input$generate_forecast, {
+    allocation_data <- activate_allocation_algorithm(values$funding_sources, values$expenses)
+    print(allocation_data$df_allocations)
+  })
+  
 
   # --- OUTPUT: Dashboard Graphs ---
+  shortfall_data <- reactive({
+    create_shortfall_bar()
+  })
+  
   output$shortfall_plot <- renderPlotly({
-    shortfall_data <- create_shortfall_bar()
-    shortfall_data$shortfall_plot
+    shortfall_data()$shortfall_plot
   })
   
   output$shortfall_number <- renderUI({
-    shortfall_data <- create_shortfall_bar()
-    shortfall_data$total_shortfalls
+    shortfall_data()$total_shortfalls
+  })
+  
+  output$total_balance <- renderUI({
+    shortfall_data()$total_balance
   })
   
   
@@ -467,9 +480,14 @@ main_server_logic <- function(input, output, session, values) {
     cm <- clicked_month()
 
     if (is.null(cm)) {
-      tags$p("Click on a month to see the chord diagram.")
+      tags$p("Click on a month to see the allocation plot.",
+             style = "font-size: 16px; text-align: center;")
     } else {
-      chorddiagOutput("circos_plot", height = "100%")
+      tagList(
+        tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
+               style = "font-size: 16px; font-weight: 600;"),
+        chorddiagOutput("circos_plot", height = "600px", width = "100%") 
+      )
     }
   })
   
