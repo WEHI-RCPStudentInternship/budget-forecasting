@@ -40,7 +40,7 @@ dashboard_ui <- function(total_balance) {
             card_header("Shortfall Breakdown"),
             card_body(
               height = 600,
-              plotlyOutput("shortfall_plot", height = "100%")
+              uiOutput("shortfall_plot")
             )
           ),
             
@@ -66,7 +66,7 @@ dashboard_ui <- function(total_balance) {
         class = "info-containers",
         card(
           div(
-            DTOutput("sample_budget_table")
+            DTOutput("budget_allocation_table")
           ),
           full_screen = TRUE,
           style = "padding: 16px; font-weight: 400; font-size: 16px;"
@@ -84,7 +84,7 @@ dashboard_ui <- function(total_balance) {
         class = "info-containers",
         card(
           div(
-            DTOutput("sample_leftover_table")
+            DTOutput("unallocated_funding_table")
           ),
           full_screen = TRUE,
           style = "padding: 16px; font-weight: 400; font-size: 16px;"

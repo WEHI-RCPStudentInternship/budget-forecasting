@@ -12,7 +12,7 @@ source("src/server/testing.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("dashboard")
+  current_view <- reactiveVal("forecast")
   
   clicked_month <- reactiveVal(NULL)
 
@@ -435,27 +435,58 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   # --- EVENT: Activating Forecasting Button ---
+  # NEEDS VALIDATION
   observeEvent(input$generate_forecast, {
+    req(values$funding_sources)
+    req(values$expenses)
     allocation_data <- activate_allocation_algorithm(values$funding_sources, values$expenses)
-    print(allocation_data$df_allocations)
+    values$allocation_result <- allocation_data$allocations
+    values$funding_summary <- allocation_data$funds
+    values$expense_status <- allocation_data$expenses
   })
   
 
   # --- OUTPUT: Dashboard Graphs ---
+  all_shortfall <- reactive(
+    nrow(values$allocation_result) > 0 &&
+    nrow(values$funding_summary) > 0 &&
+    nrow(values$expense_status) > 0
+  )
+  
   shortfall_data <- reactive({
-    create_shortfall_bar()
+    req(all_shortfall)
+    create_shortfall_bar(values)
   })
   
-  output$shortfall_plot <- renderPlotly({
+  output$shortfall_plot <- renderUI({
+    
+    if (!all_shortfall()) {
+      tags$p("No data available.")
+    } else {
+      plotlyOutput("shortfall_bar_plot", height = "100%")
+    }
+  })
+  
+  output$shortfall_bar_plot <- renderPlotly({
     shortfall_data()$shortfall_plot
   })
   
   output$shortfall_number <- renderUI({
-    shortfall_data()$total_shortfalls
+    
+    if (!all_shortfall()) {
+      tags$p("No data available.")
+    } else {
+      shortfall_data()$total_shortfalls
+    }
   })
   
   output$total_balance <- renderUI({
-    shortfall_data()$total_balance
+    
+    if (!all_shortfall()) {
+      tags$p("No data available.")
+    } else {
+      shortfall_data()$total_balance
+    }
   })
   
   
@@ -469,7 +500,7 @@ main_server_logic <- function(input, output, session, values) {
     cm <- clicked_month()
     req(cm)
     cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-    create_circos_plot(month = cutoff)
+    create_circos_plot(values, month = cutoff)
   })
   
   output$circos_plot <- renderChorddiag({
@@ -489,6 +520,26 @@ main_server_logic <- function(input, output, session, values) {
         chorddiagOutput("circos_plot", height = "600px", width = "100%") 
       )
     }
+  })
+  
+  
+  # --- OUTPUT: Dashboard Result Tables ---
+  output$budget_allocation_table <- renderDT({
+    req(values$allocation_result)
+    df <- values$allocation_result
+    
+    datatable(
+      df
+    )
+    
+  })
+  
+  output$unallocated_funding_table <- renderDT({
+    df <- values$funding_summary
+    
+    datatable(
+      df
+    )
   })
   
   

@@ -62,16 +62,25 @@ server <- function(input, output, session) {
       notes = character()
     ),
     allocation_result = data.frame(
-      SourceID = character(),
-      ExpenseID = character(),
-      ExpenseCategory = character(),
-      AllocatedAmount = numeric()
+      source_id = character(),
+      expense_id = character(),
+      expense_category = character(),
+      allocated_amount = numeric()
     ),
     funding_summary = data.frame(
-      SourceID = character(),
-      InitialAmount = numeric(),
-      UsedAmount = numeric(),
-      RemainingAmount = numeric()
+      source_id = character(),
+      initial_amount = numeric(),
+      used_amount = numeric(),
+      remaining_amount = numeric()
+    ),
+    expense_status = data.frame(
+      expense_id = character(),
+      expense_category = character(),
+      planned_amount = character(),
+      latest_payment_date = as.Date(character()),
+      filled_amount = numeric(),
+      is_filled = logical(),
+      status = character()
     )
   )
   

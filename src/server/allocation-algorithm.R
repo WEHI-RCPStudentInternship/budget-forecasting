@@ -91,89 +91,102 @@ date_to_int <- function(date_str, base_date) {
 
 
 
-
-# Dynamically setting the time
-# 1. Collect all date columns from both dataframes
-all_dates <- c(sources$ValidFrom, sources$ValidTo, expenses$Date)
-# 2. Convert to Date objects to find the minimum
-date_objects <- as.Date(unique(all_dates), format = "%d/%m/%Y")
-# 3. Find the earliest date
-global_min_date <- min(date_objects, na.rm = TRUE)
-
-# getting total number of funding source and expenses (NOT total amount)
-n_sources <- nrow(sources)
-n_expenses <- nrow(expenses)
-
-
-## ------------------------------------------------
-# This is a matrix with size n_sources x n_expenses (row is each funding sources, and column is each expenses sources), such that if the payment date of the expense fall within the valid from and valid to of the funding AND categories of the expense match with the allowed category of the source, then it will be marked as 1, otherwise 0
-# We build a Compatibility Matrix (Valid = 1, Invalid = 0)
-compatibility <- matrix(0, nrow = n_sources, ncol = n_expenses)
-
-for (i in 1:n_sources) {
-  for (j in 1:n_expenses) {
-    # 1. Category Check
-    # Expense category must be in the Source's allowed list
-    cat_match <- expenses$Category[j] %in% sources$Categories[[i]]
-    
-    # 2. Time Validity Check
-    # Convert dates to integers (Day of Year)
-    s_from <- date_to_int(sources$ValidFrom[i], global_min_date)
-    s_to   <- date_to_int(sources$ValidTo[i], global_min_date)
-    e_date <- date_to_int(expenses$Date[j], global_min_date) # Assumes this is the actual payment date
-    
-    # LOGIC: The payment date must be INSIDE the funding window (Inclusive)
-    # ValidFrom <= PaymentDate <= ValidTo
-    time_match <- (e_date >= s_from & e_date <= s_to)
-    
-    # Combine Checks
-    if (cat_match && time_match) {
-      compatibility[i, j] <- 1
-    } else {
-      compatibility[i, j] <- 0
+build_compatibility_matrix <- function(sources, expenses) {
+  
+  # Dynamically setting the time
+  # 1. Collect all date columns from both dataframes
+  all_dates <- c(sources$valid_from, sources$valid_to, expenses$latest_payment_date)
+  # 2. Convert to Date objects to find the minimum
+  date_objects <- as.Date(unique(all_dates), format = "%d/%m/%Y")
+  # 3. Find the earliest date
+  global_min_date <- min(date_objects, na.rm = TRUE)
+  
+  # getting total number of funding source and expenses (NOT total amount)
+  n_sources <- nrow(sources)
+  n_expenses <- nrow(expenses)
+  
+  ## ------------------------------------------------
+  # This is a matrix with size n_sources x n_expenses (row is each funding sources, and column is each expenses sources), such that if the payment date of the expense fall within the valid from and valid to of the funding AND categories of the expense match with the allowed category of the source, then it will be marked as 1, otherwise 0
+  # We build a Compatibility Matrix (Valid = 1, Invalid = 0)
+  compatibility <- matrix(0, nrow = n_sources, ncol = n_expenses)
+  
+  for (i in 1:n_sources) {
+    for (j in 1:n_expenses) {
+      # 1. Category Check
+      # Expense category must be in the Source's allowed list
+      cat_match <- expenses$expense_category[j] %in% sources$allowed_categories[[i]]
+      
+      # 2. Time Validity Check
+      # Convert dates to integers (Day of Year)
+      s_from <- date_to_int(sources$valid_from[i], global_min_date)
+      s_to   <- date_to_int(sources$valid_to[i], global_min_date)
+      e_date <- date_to_int(expenses$latest_payment_date[j], global_min_date) # Assumes this is the actual payment date
+      
+      # LOGIC: The payment date must be INSIDE the funding window (Inclusive)
+      # ValidFrom <= PaymentDate <= ValidTo
+      time_match <- (e_date >= s_from & e_date <= s_to)
+      
+      # Combine Checks
+      if (cat_match && time_match) {
+        compatibility[i, j] <- 1
+      } else {
+        compatibility[i, j] <- 0
+      }
     }
   }
+  
+  return (compatibility)
+  
 }
 
 
-## ------------------------------------------------
-# Maximise Sum(Weight_j * y_j)
-# Coefficients for x[i,j] are 0. Coefficients for y[j] are the weights.
-# It works because $$2^k > \sum_{i=0}^{k-1} 2^i$$, so it will always incentivise to use the funding to fulfil the expenses with higher priority
-
-weights <- 2^(n_expenses - 1 - (0:(n_expenses-1))) # Powers of 2 descending
-
-# Define the Model
-model <- MIPModel() %>%
+solve_constraint_model <- function(sources, expenses, compatibility) {
   
-  # --- Variables ---
-  # x[i,j]: Amount source i pays for expense j (Continuous, Non-negative)
-  add_variable(x[i, j], i = 1:n_sources, j = 1:n_expenses, type = "continuous", lb = 0) %>%
+  n_sources <- nrow(sources)
+  n_expenses <- nrow(expenses)
   
-  # y[j]: Binary indicator if expense j is fully paid (0 or 1)
-  add_variable(y[j], j = 1:n_expenses, type = "binary") %>%
+  ## ------------------------------------------------
+  # Maximise Sum(Weight_j * y_j)
+  # Coefficients for x[i,j] are 0. Coefficients for y[j] are the weights.
+  # It works because $$2^k > \sum_{i=0}^{k-1} 2^i$$, so it will always incentivise to use the funding to fulfil the expenses with higher priority
   
-  # --- Objective Function ---
-  # Maximize Sum(Weights * y)
-  set_objective(sum_expr(weights[j] * y[j], j = 1:n_expenses), "max") %>%
+  weights <- 2^(n_expenses - 1 - (0:(n_expenses-1))) # Powers of 2 descending
   
-  # --- Constraints ---
+  # Define the Model
+  model <- MIPModel() %>%
+    
+    # --- Variables ---
+    # x[i,j]: Amount source i pays for expense j (Continuous, Non-negative)
+    add_variable(x[i, j], i = 1:n_sources, j = 1:n_expenses, type = "continuous", lb = 0) %>%
+    
+    # y[j]: Binary indicator if expense j is fully paid (0 or 1)
+    add_variable(y[j], j = 1:n_expenses, type = "binary") %>%
+    
+    # --- Objective Function ---
+    # Maximize Sum(Weights * y)
+    set_objective(sum_expr(weights[j] * y[j], j = 1:n_expenses), "max") %>%
+    
+    # --- Constraints ---
+    
+    # 1. Supply Constraint: Sum of allocations from Source i <= Source Amount
+    add_constraint(sum_expr(x[i, j], j = 1:n_expenses) <= sources$amount[i], i = 1:n_sources) %>%
+    
+    # 2. Demand Linking: Sum of allocations to Expense j == Expense Amount * y[j]
+    # If y[j]=1, we must pay full amount. If y[j]=0, we pay 0.
+    add_constraint(sum_expr(x[i, j], i = 1:n_sources) == expenses$planned_amount[j] * y[j], j = 1:n_expenses) %>%
+    
+    # 3. Compatibility Constraint
+    # If compatibility[i, j] == 0, then x[i, j] must be 0
+    add_constraint(x[i, j] == 0, i = 1:n_sources, j = 1:n_expenses, compatibility[i, j] == 0)
   
-  # 1. Supply Constraint: Sum of allocations from Source i <= Source Amount
-  add_constraint(sum_expr(x[i, j], j = 1:n_expenses) <= sources$Amount[i], i = 1:n_sources) %>%
   
-  # 2. Demand Linking: Sum of allocations to Expense j == Expense Amount * y[j]
-  # If y[j]=1, we must pay full amount. If y[j]=0, we pay 0.
-  add_constraint(sum_expr(x[i, j], i = 1:n_sources) == expenses$Amount[j] * y[j], j = 1:n_expenses) %>%
   
-  # 3. Compatibility Constraint
-  # If compatibility[i, j] == 0, then x[i, j] must be 0
-  add_constraint(x[i, j] == 0, i = 1:n_sources, j = 1:n_expenses, compatibility[i, j] == 0)
-
-
-
-## ------------------------------------------------
-result <- solve_model(model, with_ROI(solver = "highs"))
+  ## ------------------------------------------------
+  result <- solve_model(model, with_ROI(solver = "highs"))
+  
+  return (result)
+  
+}
 
 
 ## ------------------------------------------------
@@ -191,7 +204,7 @@ apply_greedy_fill <- function(result, sources, expenses, compatibility) {
   
   # B. Calculate Remaining Capacity per Source
   current_source_usage <- rowSums(mat_x)
-  source_remaining <- sources$Amount - current_source_usage
+  source_remaining <- sources$amount - current_source_usage
   source_remaining[source_remaining < 1e-6] <- 0 # Fix floating point dust
   
   # C. Identify Unfunded Expenses (Binary y[j] == 0)
@@ -202,7 +215,7 @@ apply_greedy_fill <- function(result, sources, expenses, compatibility) {
   
   # D. The Greedy Loop
   for (j in unfunded_indices) {
-    amount_needed <- expenses$Amount[j]
+    amount_needed <- expenses$planned_amount[j]
     
     # Try to find money in compatible sources
     for (i in 1:n_sources) {
@@ -236,15 +249,15 @@ print_financial_report <- function(mat_x, sources, expenses) {
   
   # Calculate Status based on matrix totals
   expense_total_alloc <- colSums(mat_x)
-  idx_full <- which(expense_total_alloc >= expenses$Amount - 1e-5)
-  idx_partial <- which(expense_total_alloc > 1e-5 & expense_total_alloc < expenses$Amount - 1e-5)
+  idx_full <- which(expense_total_alloc >= expenses$planned_amount - 1e-5)
+  idx_partial <- which(expense_total_alloc > 1e-5 & expense_total_alloc < expenses$planned_amount - 1e-5)
   idx_none <- which(expense_total_alloc <= 1e-5)
   
   # --- 1. FULLY FUNDED ---
   cat("\n--- Fully Funded Expenses ---\n")
   if(length(idx_full) > 0) {
     for (j in idx_full) {
-      cat(sprintf("%s: %s ($%s)\n", expenses$ID[j], expenses$Category[j], format(expenses$Amount[j], big.mark=",")))
+      cat(sprintf("%s: %s ($%s)\n", expenses$expense_id[j], expenses$expense_category[j], format(expenses$planned_amount[j], big.mark=",")))
     }
   } else { cat("None.\n") }
   
@@ -253,8 +266,8 @@ print_financial_report <- function(mat_x, sources, expenses) {
   if(length(idx_partial) > 0) {
     for (j in idx_partial) {
       filled_amt <- expense_total_alloc[j]
-      percent <- (filled_amt / expenses$Amount[j]) * 100
-      cat(sprintf("%s: %s ($%s / $%s) - %.1f%% Covered\n", expenses$ID[j], expenses$Category[j], format(filled_amt, big.mark=","), format(expenses$Amount[j], big.mark=","), percent))
+      percent <- (filled_amt / expenses$planned_amount[j]) * 100
+      cat(sprintf("%s: %s ($%s / $%s) - %.1f%% Covered\n", expenses$expense_id[j], expenses$expense_category[j], format(filled_amt, big.mark=","), format(expenses$planned_amount[j], big.mark=","), percent))
     }
   } else { cat("None.\n") }
   
@@ -262,7 +275,7 @@ print_financial_report <- function(mat_x, sources, expenses) {
   cat("\n--- Unfunded Expenses ---\n")
   if(length(idx_none) > 0) {
     for (j in idx_none) {
-      cat(sprintf("%s: %s ($%s) - Due: %s\n", expenses$ID[j], expenses$Category[j], format(expenses$Amount[j], big.mark=","), expenses$Date[j]))
+      cat(sprintf("%s: %s ($%s) - Due: %s\n", expenses$expense_id[j], expenses$expense_category[j], format(expenses$planned_amount[j], big.mark=","), expenses$latest_payment_date[j]))
     }
   } else { cat("None.\n") }
   
@@ -276,7 +289,7 @@ print_financial_report <- function(mat_x, sources, expenses) {
     for (j in 1:n_expenses) {
       val <- mat_x[i, j]
       if (val > 1e-6) {
-        cat(sprintf("%-8s -> %-8s %-15s $%s\n", sources$ID[i], expenses$ID[j], expenses$Category[j], format(val, nsmall=2, big.mark=",")))
+        cat(sprintf("%-8s -> %-8s %-15s $%s\n", sources$source_id[i], expenses$expense_id[j], expenses$expense_category[j], format(val, nsmall=2, big.mark=",")))
       }
     }
   }
@@ -288,11 +301,11 @@ print_financial_report <- function(mat_x, sources, expenses) {
   total_unused <- 0
   for (i in 1:n_sources) {
     used <- sum(mat_x[i, ])
-    remaining <- sources$Amount[i] - used
+    remaining <- sources$amount[i] - used
     if (remaining < 1e-6) remaining <- 0
     total_unused <- total_unused + remaining
-    cats_str <- paste(unlist(sources$Categories[i]), collapse = ", ")
-    cat(sprintf("%-8s %-10s %-10s %-10s %s\n", sources$ID[i], format(sources$Amount[i], big.mark=",", nsmall=0), format(round(used), big.mark=",", nsmall=0), format(round(remaining), big.mark=",", nsmall=0), cats_str))
+    cats_str <- paste(unlist(sources$allowed_categories[i]), collapse = ", ")
+    cat(sprintf("%-8s %-10s %-10s %-10s %s\n", sources$source_id[i], format(sources$amount[i], big.mark=",", nsmall=0), format(round(used), big.mark=",", nsmall=0), format(round(remaining), big.mark=",", nsmall=0), cats_str))
   }
   cat("-----------------------------------------------------------------\n")
   cat(sprintf("TOTAL UNUSED FUNDS: $%s\n", format(total_unused, big.mark=",")))
@@ -312,13 +325,13 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   
   # Construct the dataframe directly from indices
   df_allocations <- data.frame(
-    SourceID = sources$ID[alloc_idx[, 1]],
-    ExpenseID = expenses$ID[alloc_idx[, 2]],
-    ExpenseCategory = expenses$Category[alloc_idx[, 2]],
-    AllocatedAmount = mat_x[alloc_idx]
+    source_id = sources$source_id[alloc_idx[, 1]],
+    expense_id = expenses$expense_id[alloc_idx[, 2]],
+    expense_category = expenses$expense_category[alloc_idx[, 2]],
+    allocated_amount = mat_x[alloc_idx]
   )
   # Optional: Sort by Source then Expense
-  df_allocations <- df_allocations[order(df_allocations$SourceID, df_allocations$ExpenseID), ]
+  df_allocations <- df_allocations[order(df_allocations$source_id, df_allocations$expense_id), ]
   
   
   # --- 2. Expense Status DataFrame ---
@@ -326,14 +339,14 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   expense_filled_amounts <- colSums(mat_x)
   
   df_expenses_status <- expenses
-  df_expenses_status$FilledAmount <- expense_filled_amounts
+  df_expenses_status$filled_amount <- expense_filled_amounts
   
   # Determine status: Fully Filled if allocated >= requested (minus tiny error)
-  df_expenses_status$IsFilled <- expense_filled_amounts >= (expenses$Amount - 1e-5)
+  df_expenses_status$is_filled <- expense_filled_amounts >= (expenses$planned_amount - 1e-5)
   
   # Add a readable Status column
-  df_expenses_status$Status <- ifelse(df_expenses_status$IsFilled, "Full",
-                                      ifelse(df_expenses_status$FilledAmount > 1e-6, "Partial", "Unfunded"))
+  df_expenses_status$status <- ifelse(df_expenses_status$is_filled, "Full",
+                                      ifelse(df_expenses_status$filled_amount > 1e-6, "Partial", "Unfunded"))
   
   
   # --- 3. Funds Summary DataFrame ---
@@ -341,13 +354,13 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   source_used_amounts <- rowSums(mat_x)
   
   df_funds_summary <- data.frame(
-    SourceID = sources$ID,
-    InitialAmount = sources$Amount,
-    UsedAmount = source_used_amounts,
-    RemainingAmount = sources$Amount - source_used_amounts
+    source_id = sources$source_id,
+    initial_amount = sources$amount,
+    used_amount = source_used_amounts,
+    remaining_amount = sources$amount - source_used_amounts
   )
   # Clean up negative zeros
-  df_funds_summary$RemainingAmount[df_funds_summary$RemainingAmount < 0] <- 0
+  df_funds_summary$remaining_amount[df_funds_summary$remaining_amount < 0] <- 0
   
   # Return all 3 as a named list
   return(list(
@@ -360,6 +373,11 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
 
 activate_allocation_algorithm <- function(sources, expenses) {
   ## ------------------------------------------------
+  
+  compatibility <- build_compatibility_matrix(sources, expenses)
+  
+  result <- solve_constraint_model(sources, expenses, compatibility)
+  
   if (result$status == "optimal" || result$status == "success") {
     
     # Partial fill
