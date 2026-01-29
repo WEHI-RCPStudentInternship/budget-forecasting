@@ -153,10 +153,11 @@ create_shortfall_bar <- function(values) {
     arrange(Month)
   
   print(monthly_shortfall)
-  
+  print("expense stats")
+  print(expenses_month_status, n = 85)
   
   shortfall_num <- expenses_month_status %>%
-    filter(is_short == TRUE & is_overdue == TRUE)
+    filter(is_short == TRUE)
   
   total_shortfalls <- length(unique(shortfall_num$expense_id))
   

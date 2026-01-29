@@ -39,7 +39,7 @@ dashboard_ui <- function(total_balance) {
             id = "shortfall-graph",
             card_header("Shortfall Breakdown"),
             card_body(
-              height = 600,
+              height = "auto",
               uiOutput("shortfall_plot")
             )
           ),
