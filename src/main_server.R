@@ -8,12 +8,24 @@ source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
 source("src/server/edit-rows.R")
+source("src/server/testing.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("expense")
+  current_view <- reactiveVal("forecast")
   
   clicked_month <- reactiveVal(NULL)
+
+  # --- Data Validation ---
+  observe({
+    correct_format_data <- data_validation(values)
+  }) %>%
+    bindEvent(
+      values$funding_sources,
+      values$expenses,
+      ignoreNULL = FALSE
+    )
+  
 
 
   # --- EVENTS: Navigation between tabs ---
@@ -75,7 +87,7 @@ main_server_logic <- function(input, output, session, values) {
 
   # --- OUTPUT: Render priority mode ---
   output$priority_card <- renderUI({
-    if (input$select_priority == "Manual Priority") {
+    if (isTruthy(input$select_priority) && input$select_priority == "Manual Priority") {
       manual_priority_ui()
     } else {
       column_priority_ui()
@@ -87,7 +99,8 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_first_priority_item == "Payment Date") {
       payment_date_view()
     } else {
-      categories_view()
+
+      categories_view(categories = available_categories())
     }
   })
 
@@ -96,15 +109,89 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_second_priority_item == "Payment Date") {
       payment_date_view()
     } else if (input$select_second_priority_item == "Categories") {
-      categories_view()
+      categories_view(categories = available_categories())
     } else if (input$select_second_priority_item == "None") {
       div("No second priority.", class = "no-second-priority")
     }
   })
+  
+  # --- EVENT: Mutual Exclusion for Priority Dropdowns ---
+  observeEvent(input$select_first_priority_item, {
+    # 1. Get the current value of the 1st Priority
+    p1_val <- input$select_first_priority_item
+    
+    # 2. Define all available choices for the 2nd Priority
+    p2_choices <- c("Payment Date", "Categories", "None")
+    
+    # 3. Identify the item to disable (the one already selected in P1)
+    disabled_choices <- p2_choices[p2_choices == p1_val]
+    
+    # 4. Update the 2nd Priority pickerInput state态
+    updatePickerInput(
+      session = session,
+      inputId = "select_second_priority_item",
+      choices = p2_choices,
+      choicesOpt = list(
+        # Disable the item selected in P1
+        disabled = p2_choices %in% disabled_choices,
+        # Make the disabled option appear gray
+        style = ifelse(p2_choices %in% disabled_choices, 
+                       "color: rgba(0,0,0,0.3); background: #f8f9fa;", "")
+      )
+    )
+    
+    # 5. Safety Check: If P2 was already set to the newly disabled item, reset it to "None"
+    if (input$select_second_priority_item == p1_val) {
+      updatePickerInput(session, "select_second_priority_item", selected = "None")
+    }
+  })
 
-  # --- EVENT: Dragging feature for categories priority ---
+  # Dragging feature for categories priority
+  drag_order <- reactiveVal(NULL)
   observeEvent(input$drag_categories, {
-    input$drag_categories
+    drag_order(input$drag_categories)
+  })
+
+  available_categories <- reactive({
+    # expenses categories (safe)
+    exp_cats <- character(0)
+    if (!is.null(values$expenses) && is.data.frame(values$expenses) && "expense_category" %in% names(values$expenses)) {
+      exp_cats_raw <- values$expenses$expense_category
+      if (is.factor(exp_cats_raw)) exp_cats_raw <- as.character(exp_cats_raw)
+      exp_cats <- as.character(exp_cats_raw)
+      exp_cats <- trimws(exp_cats)
+      exp_cats <- exp_cats[!is.na(exp_cats) & nzchar(exp_cats)]
+    }
+
+    # funding allowed categories (list-column or comma-separated)
+    fund_cats <- character(0)
+    if (!is.null(values$funding_sources) && is.data.frame(values$funding_sources) && "allowed_categories" %in% names(values$funding_sources)) {
+      ac <- values$funding_sources$allowed_categories
+
+      if (is.list(ac)) {
+        fund_cats_raw <- unlist(ac, use.names = FALSE)
+      } else {
+        # atomic vector: might contain comma-separated strings
+        fund_cats_raw <- as.character(ac)
+        fund_cats_raw <- unlist(strsplit(fund_cats_raw[!is.na(fund_cats_raw)], ",\\s*"), use.names = FALSE)
+      }
+
+      fund_cats <- trimws(as.character(fund_cats_raw))
+      fund_cats <- fund_cats[!is.na(fund_cats) & nzchar(fund_cats)]
+    }
+
+    # combine, dedupe, sort
+    cats <- sort(unique(c(exp_cats, fund_cats)))
+    
+    dr <- drag_order()
+    if (!is.null(dr)) {
+      # Preserve user-defined order
+      dr_filtered <- dr[dr %in% cats]
+      extras <- setdiff(cats, dr_filtered)
+      c(dr_filtered, sort(extras))
+    } else {
+      cats
+    }
   })
 
   # --- FEATURE: Manual Row Reordering ---
@@ -147,7 +234,7 @@ main_server_logic <- function(input, output, session, values) {
   observeEvent(input$spreadsheet_upload, {
     req(input$spreadsheet_upload)
     path <- input$spreadsheet_upload$datapath
-    
+
     tryCatch({
       data_list <- read_excel_data(path)
       funding_sources_df <- data_list$funding_sources
@@ -160,90 +247,65 @@ main_server_logic <- function(input, output, session, values) {
       showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
     })
   })
-  
-  
 
-  # ----------------------------
-  # SORTING LOGIC
-  # This section handles sorting of expenses based on user selection:
-  # - Manual sorting (drag-and-drop order from UI)
-  # - Sort by column (user-defined criteria and category order)
-  # The output 'values$expenses_sorted' includes 'final_order' column
-  # and will be used as input for the allocation algorithm
-  # ----------------------------
 
-  # ----------------------------
-  # 1. Watch for changes in sorting mode from UI
-  # 'sorting_mode' should come from a dropdown: "manual" or "by_rules"
-  # ----------------------------
-  observeEvent(input$sorting_mode, {
-    # Get the selected sorting mode
-    mode_selected <- input$sorting_mode
 
-    # Get the processed expenses data from previous step
-    # Must include 'original_index' for tie-breaking
-    expenses_data <- values$expenses_data
-
-    # ----------------------------
-    # 2. Manual sorting
-    # ----------------------------
-    if (mode_selected == "manual") {
-      # TODO: Retrieve user's drag-and-drop order from UI
-      # This should be a dataframe 'manual_order' with column 'id'
-      # matching expenses_data$id
-      manual_order <- NULL # placeholder
-
-      # Call the sorting function
-      expenses_sorted <- main_sorting_expenses(
-        expenses_data = expenses_data,
-        mode = "manual",
-        manual_order = manual_order
-      )
-    } else if (mode_selected == "by_rules") {
-      # ----------------------------
-      # 3. Sort by column (by_rules)
-      # ----------------------------
-      # TODO: Retrieve user's ordering rules from UI
-      # Example format:
-      # list(
-      #   criteria = c("latest_payment_date", "category"),
-      #   category_order = c("salary", "travel", "research")
-      # )
-      ordering_rules <- NULL # placeholder
-
-      # Call the sorting function
-      expenses_sorted <- main_sorting_expenses(
-        expenses_data = expenses_data,
-        mode = "by_rules",
-        ordering_rules = ordering_rules
-      )
-    } else {
-      stop("Invalid sorting mode selected")
-    }
-
-    # ----------------------------
-    # 4. Save sorted expenses to reactive values
-    # The sorted dataframe includes 'final_order' column and will be
-    # used as input for the allocation algorithm
-    # ----------------------------
-    values$expenses_sorted <- expenses_sorted
-
-    # ----------------------------
-    # TODOs for future integration:
-    # - Connect 'manual_order' to the actual UI drag-and-drop result
-    # - Connect 'ordering_rules' to the UI ordering rules drag-and-drop
-    # ----------------------------
+  # --- EVENT: Logic for column sorting ---
+  # 1.Dynamically generate the sorting rules list
+  current_ordering_rules <- reactive({
+    # Ensure UI is initialized
+    req(input$select_first_priority_item)
+    
+    category_order <- if (!is.null(drag_order())) drag_order() else available_categories()
+    
+    list(
+      p1_item = input$select_first_priority_item,
+      p1_date_dir = input$`payment-date-options`,
+      p2_item = input$select_second_priority_item,
+      p2_date_dir = input$`payment-date-options`,
+      category_order = category_order
+    )
   })
   
+
   observe({
-    print(str(input$spreadsheet_upload))
-  })
-  
+    
+    # Do not proceed if no data is loaded
+    req(values$expenses)
+    req(nrow(values$expenses) > 0)
+    # Get current rules
+    rules <- current_ordering_rules()
+    
+    # Retrieve data
+    data_to_sort <- values$expenses
+        
+    # Execute sorting
+    sorted_result <- col_ordering(
+      expenses_data = data_to_sort,
+      ordering_rules = rules
+    )
+    
+    # Write back values
+    if (!is.null(values$expenses) && nrow(values$expenses) > 0) {
+      values$expenses <- sorted_result
+    }
+    
+  }) %>% bindEvent(
+    input$select_priority,
+    input$select_first_priority_item,
+    input$select_second_priority_item,
+    input$`payment-date-options`, 
+    input$drag_categories,
+    # Ensure it runs even if some inputs are empty
+    ignoreInit = FALSE,
+    ignoreNULL = FALSE
+  )
 
   # --- EVENTS: Add Funding Button ---
-  # Open add funding modal
+
+  # Adding new funding form
   observeEvent(input$add_funding, {
-    showModal(upload_funding_modal())
+    showModal(upload_funding_modal(categories = available_categories()))
   })
 
   # Adding new funding
@@ -259,11 +321,10 @@ main_server_logic <- function(input, output, session, values) {
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
   
-
   # --- EVENTS: Add Expense Button ---
   # Open add expense modal
   observeEvent(input$add_expense, {
-    showModal(upload_expense_modal())
+    showModal(upload_expense_modal(categories = available_categories()))
   })
   
   # Adding new expense
@@ -279,11 +340,35 @@ main_server_logic <- function(input, output, session, values) {
     values$expenses <- delete_row(values$expenses, selected)
   })
 
+  # --- OUTPUT: Data Tables ---
+  display_funding_names <- c(
+    priority = "Priority",
+    source_id = "Source ID",
+    funding_source = "Funding Source",
+    allowed_categories = "Allowed Categories",
+    valid_from = "Valid From",
+    valid_to = "Valid To",
+    amount = "Amount",
+    notes = "Notes"
+  )
+
+  display_expense_names <- c(
+    priority = "Priority",
+    expense_id = "Expense ID",
+    expense_name = "Expense Name",
+    expense_category = "Expense Category",
+    planned_amount = "Planned Amount",
+    latest_payment_date = "Latest Payment Date",
+    notes = "Notes"
+  )
 
   output$sample_funding_table <- renderDT({
-    
+    req(values$funding_sources)
+    df <- values$funding_sources
+    colnames(df) <- display_funding_names[names(df)]
+
     datatable(
-      values$funding_sources,
+      df,
       options = list(
         dom = "<'row align-items-center'
                 <'col-sm-6'l>
@@ -304,8 +389,11 @@ main_server_logic <- function(input, output, session, values) {
   
 
   output$sample_expense_table <- renderDT({
+    req(values$expenses)
+    df <- values$expenses
+    colnames(df) <- display_expense_names[names(df)]
     datatable(
-      values$expenses |> select(-old_index),
+      df,
       options = list(
         pageLength = 10,
         scrollX = TRUE,
@@ -331,39 +419,84 @@ main_server_logic <- function(input, output, session, values) {
     else {
       df <- values$expenses
     }
+
+    colnames(df) <- display_expense_names[names(df)]
     datatable(
-      df |> select(-old_index),
+      df,
       extensions = 'RowReorder',
       selection = 'none',
       callback = JS(row_reorder_callback),
       options = list(
         rowReorder = TRUE,
-        pageLength = 100
+        pageLength = 100,
+        dom = "<'row align-items-center'
+                <'col-sm-6'l>
+                <'col-sm-6 text-end'B>
+              >
+              <'row'<'col-sm-12'f>>
+              t
+              <'row'
+                <'col-sm-5'i>
+                <'col-sm-7'p>
+              >"
       ),
       rownames = FALSE
     )
   })
   
-  output$sample_priority_table <- renderDT({
-    datatable(
-      values$expenses |> select(-old_index),
-      options = list(
-        pageLength = 10,
-        scrollX = TRUE,
-        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
-      ),
-      rownames = FALSE
-    )
+  # --- EVENT: Activating Forecasting Button ---
+  # NEEDS VALIDATION
+  observeEvent(input$generate_forecast, {
+    req(values$funding_sources)
+    req(values$expenses)
+    allocation_data <- activate_allocation_algorithm(values$funding_sources, values$expenses)
+    values$allocation_result <- allocation_data$allocations
+    values$funding_summary <- allocation_data$funds
+    values$expense_status <- allocation_data$expenses
   })
   
-  output$shortfall_plot <- renderPlotly({
-    shortfall_data <- create_shortfall_bar()
-    shortfall_data$shortfall_plot
+
+  # --- OUTPUT: Dashboard Graphs ---
+  all_shortfall <- reactive(
+    nrow(values$allocation_result) > 0 &&
+    nrow(values$funding_summary) > 0 &&
+    nrow(values$expense_status) > 0
+  )
+  
+  shortfall_data <- reactive({
+    req(all_shortfall)
+    create_shortfall_bar(values)
+  })
+  
+  output$shortfall_plot <- renderUI({
+    
+    if (!all_shortfall()) {
+      tags$p("No data available.")
+    } else {
+      plotlyOutput("shortfall_bar_plot", height = "100%")
+    }
+  })
+  
+  output$shortfall_bar_plot <- renderPlotly({
+    shortfall_data()$shortfall_plot
   })
   
   output$shortfall_number <- renderUI({
-    shortfall_data <- create_shortfall_bar()
-    shortfall_data$total_shortfalls
+    
+    if (!all_shortfall()) {
+      tags$p("No data available.")
+    } else {
+      shortfall_data()$total_shortfalls
+    }
+  })
+  
+  output$total_balance <- renderUI({
+    
+    if (!all_shortfall()) {
+      tags$p("No data available.")
+    } else {
+      shortfall_data()$total_balance
+    }
   })
   
   
@@ -371,18 +504,55 @@ main_server_logic <- function(input, output, session, values) {
     clicked_bar <- event_data("plotly_click")
     req(clicked_bar)
     clicked_month(clicked_bar$x)
-    print(clicked_month())
+  })
+  
+  circos_month <- reactive({
+    cm <- clicked_month()
+    req(cm)
+    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+    create_circos_plot(values, month = cutoff)
+  })
+  
+  output$circos_plot <- renderChorddiag({
+    circos_month()
   })
   
   output$circos_container <- renderUI({
     cm <- clicked_month()
-    
+
     if (is.null(cm)) {
-      tags$p("click on a month to see circos plot")
+      tags$p("Click on a month to see the allocation plot.",
+             style = "font-size: 16px; text-align: center;")
     } else {
-      plotOutput("circos_plot", height = "400px")
+      tagList(
+        tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
+               style = "font-size: 16px; font-weight: 600;"),
+        chorddiagOutput("circos_plot", height = "600px", width = "100%") 
+      )
     }
   })
+  
+  
+  # --- OUTPUT: Dashboard Result Tables ---
+  output$budget_allocation_table <- renderDT({
+    req(values$allocation_result)
+    df <- values$allocation_result
+    
+    datatable(
+      df
+    )
+    
+  })
+  
+  output$unallocated_funding_table <- renderDT({
+    df <- values$funding_summary
+    
+    datatable(
+      df
+    )
+  })
+  
+  
 }
 
 

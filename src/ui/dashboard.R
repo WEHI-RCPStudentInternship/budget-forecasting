@@ -16,7 +16,7 @@ dashboard_ui <- function(total_balance) {
           
           value_box(
             title = "Total Balance",
-            total_balance,
+            uiOutput("total_balance"),
             "Balance before the expense",
             full_screen = FALSE,
             class = "info-box"
@@ -34,25 +34,23 @@ dashboard_ui <- function(total_balance) {
         card(
           class = "graphic-output",
           p("Expense and Shortfall Breakdown", style = "font-size: 16px;"),
-          layout_columns(
-            col_widths = c(6, 6),
             
-            card(
-              id = "shortfall-graph",
-              full_screen = TRUE,
-              height = 600,
-              card_header("Shortfall Breakdown"),
-              plotlyOutput("shortfall_plot", height = "100%")
-            ),
-              
-            card(
-              id = "expense-graph",
-              full_screen = TRUE,
-              card_header("Expense Breakdown"),
-              uiOutput("circos_container")
+          card(
+            id = "shortfall-graph",
+            card_header("Shortfall Breakdown"),
+            card_body(
+              height = "auto",
+              uiOutput("shortfall_plot")
             )
           ),
-          
+            
+          card(
+            id = "expense-graph",
+            card_header("Expense Breakdown"),
+            height = "auto",
+            uiOutput("circos_container")
+          ),
+        
           style = "font-weight: normal;"
         )
       )
@@ -68,7 +66,7 @@ dashboard_ui <- function(total_balance) {
         class = "info-containers",
         card(
           div(
-            DTOutput("sample_budget_table")
+            DTOutput("budget_allocation_table")
           ),
           full_screen = TRUE,
           style = "padding: 16px; font-weight: 400; font-size: 16px;"
@@ -86,14 +84,14 @@ dashboard_ui <- function(total_balance) {
         class = "info-containers",
         card(
           div(
-            DTOutput("sample_leftover_table")
+            DTOutput("unallocated_funding_table")
           ),
           full_screen = TRUE,
           style = "padding: 16px; font-weight: 400; font-size: 16px;"
         )
       )
     ),
-    actionButton("budget_download", "↓ Download Budget Allocation", class = "budget_download_btn"),
+    downloadButton("budget_download", "Download Budget Allocation", class = "budget_download_btn"),
     actionButton("exit_session", "Exit Session", class = "exit_session_btn")
   )
 }

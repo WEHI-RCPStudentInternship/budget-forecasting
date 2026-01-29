@@ -6,6 +6,7 @@ source("requirements/packages.R")
 
 # 1. Installing packages
 
+options(shiny.launch.browser = TRUE)
 run_setup()
 
 
@@ -28,8 +29,9 @@ library(sortable)
 library(ggplot2)
 library(plotly)
 
-# library(gurobi)
+
 # library(Matrix)
+
 
 
 # 3. Load UI
@@ -40,8 +42,6 @@ ui <- main_ui_layout()
 
 # 4. Load Server
 server <- function(input, output, session) {
-  
-  # Memory (to be filled)
   values <- reactiveValues(
     funding_sources = data.frame(
       source_id = character(),
@@ -59,10 +59,29 @@ server <- function(input, output, session) {
       expense_category = character(),
       planned_amount = numeric(),
       latest_payment_date = as.Date(character()),
-      notes = character(),
-      old_index = integer()
+      notes = character()
     ),
-    allocation_result = data.frame()
+    allocation_result = data.frame(
+      source_id = character(),
+      expense_id = character(),
+      expense_category = character(),
+      allocated_amount = numeric()
+    ),
+    funding_summary = data.frame(
+      source_id = character(),
+      initial_amount = numeric(),
+      used_amount = numeric(),
+      remaining_amount = numeric()
+    ),
+    expense_status = data.frame(
+      expense_id = character(),
+      expense_category = character(),
+      planned_amount = character(),
+      latest_payment_date = as.Date(character()),
+      filled_amount = numeric(),
+      is_filled = logical(),
+      status = character()
+    )
   )
   
   main_server_logic(input, output, session, values)
