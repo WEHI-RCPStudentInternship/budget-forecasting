@@ -1,25 +1,8 @@
-
 # ----------------------------------------------------
 #
 #  Allocation Algorithm V3: allows for overdue payment
 #
 # ----------------------------------------------------
-
-
-
-## ----setup, include=FALSE------------------------
-knitr::opts_chunk$set(echo = TRUE)
-
-
-## ------------------------------------------------
-# install.packages(c("ompr", "ompr.roi", "ROI", "ROI.plugin.highs"))
-library(ompr)
-library(ompr.roi)
-library(ROI)
-library(ROI.plugin.highs)
-library(magrittr)
-library(dplyr)
-
 
 ## ------------------------------------------------
 # Input format: DD/MM/YYYY
@@ -29,66 +12,6 @@ date_to_int <- function(date_str, base_date) {
   # Return numeric difference + 1 (so the first day is Day 1, not Day 0)
   return(as.numeric(dt - base_date) + 1)
 }
-
-
-## ------------------------------------------------
-# Source Data Frame, assume in the order of preference, first will have the highest allocation priority
-# sources <- data.frame(
-#   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007", "FS008", "FS009", "FS010"),
-#   # Here we have use I(list(...)) is because we want to store multiple categories (with different number of categories per funding source, i.e. Salary for F1, Equipement AND Salary for F2)
-#   Categories = I(list(
-#     c("Salary"), c("Equipment"), c("Travel"), c("Salary", "Travel"),
-#     c("Equipment", "Travel"), c("Salary"), c("Equipment"), c("Travel"),
-#     c("Salary", "Equipment"), c("Salary", "Equipment", "Travel")
-#   )),
-#   ValidFrom = c("01/02/2025", "01/02/2025", "01/02/2025", "01/02/2025", "01/04/2025",
-#                 "01/01/2025", "01/01/2025", "01/05/2025", "01/07/2025", "01/02/2025"),
-#   ValidTo = c("30/06/2025", "31/08/2025", "30/12/2025", "31/12/2025", "31/10/2025",
-#               "31/12/2025", "31/12/2025", "30/11/2025", "31/12/2025", "31/12/2025"),
-#   Amount = c(15000, 12000, 10000, 20000, 10000, 18000, 36000, 5000, 14000, 10000)
-# )
-
-
-# Expense Data Frame
-# expenses <- data.frame(
-#   ID = c("E009", "E014", "E015", "E013", "E001", "E002", "E003", "E004", "E005",
-#          "E006", "E007", "E008", "E010", "E011", "E012"),
-#   Category = c("Travel", "Equipment", "Travel", "Salary", "Salary", "Equipment",
-#                "Travel", "Salary", "Equipment", "Travel", "Salary", "Equipment",
-#                "Salary", "Equipment", "Travel"),
-#   Amount = c(6000, 20000, 20000, 20000, 5000, 8000, 3000, 12000, 15000, 4000,
-#              8000, 10000, 15000, 12000, 10000),
-#   Date = c("10/08/2025", "20/12/2025", "25/12/2025", "01/05/2025", "15/02/2025",
-#            "20/02/2025", "10/03/2025", "15/04/2025", "20/05/2025", "10/06/2025",
-#            "15/07/2025", "20/07/2025", "15/09/2025", "20/10/2025", "10/11/2025")
-# )
-
-# # Funding Source
-# sources <- data.frame(
-#   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007"),
-#   Categories = I(list(
-#     c("Salary"),
-#     c("Equipment"),
-#     c("Travel"),
-#     c("Salary"),
-#     c("Equipment"),
-#     c("Travel"),
-#     c("Equipment")
-#   )),
-#   ValidFrom = c("01/01/2025", "01/02/2025", "01/04/2025", "01/05/2025", "01/07/2025", "01/01/2025", "01/10/2025"),
-#   ValidTo   = c("31/03/2025", "30/06/2025", "30/09/2025", "31/12/2025", "31/12/2025", "31/12/2025", "31/12/2025"),
-#   Amount = c(12000, 18000, 10000, 30000, 15000, 8000, 9000)
-# )
-# 
-# # Expense
-# expenses <- data.frame(
-#   ID = c("E001","E002","E003","E004","E005","E006","E007","E008","E009","E010"),
-#   Category = c("Salary","Equipment","Salary","Travel","Equipment","Salary","Travel","Equipment","Salary","Travel"),
-#   Amount = c(9000, 40000, 8000, 6000, 15000, 20000, 7000, 9000, 12000, 5000),
-#   Date = c("15/01/2025","20/02/2025","10/03/2025","05/04/2025","15/05/2025",
-#            "10/06/2025","20/07/2025","30/08/2025","01/10/2025","15/11/2025")
-# )
-
 
 
 build_compatibility_matrix <- function(sources, expenses) {
@@ -384,7 +307,7 @@ activate_allocation_algorithm <- function(sources, expenses) {
     final_matrix <- apply_greedy_fill(result, sources, expenses, compatibility)
     
     # Print report in R
-    print_financial_report(final_matrix, sources, expenses)
+    # print_financial_report(final_matrix, sources, expenses)
     
     # Generate DataFrames
     dfs <- create_financial_dfs(final_matrix, sources, expenses)
@@ -407,13 +330,13 @@ activate_allocation_algorithm <- function(sources, expenses) {
 # ExpenseID: ID of the expense being paid (e.g., E004).
 # ExpenseCategory: The category of the expense (e.g., Salary).
 # AllocatedAmount: The exact dollar amount transferred.
-df_allocations
+#df_allocations
 
 
 ## ------------------------------------------------
 # All original columns (ID, Category, Amount, Date) plus:
 # IsFilled: A Boolean (TRUE/FALSE) indicating if the optimization solver selected this expense.
-df_expenses_status
+#df_expenses_status
 
 
 ## ------------------------------------------------
@@ -421,7 +344,7 @@ df_expenses_status
 # InitialAmount: The starting budget.
 # UsedAmount: Total allocated in this solution (sum(x_matrix[i, ])).
 # RemainingAmount: What is left over (Initial - Used).
-df_funds_summary
+#df_funds_summary
 
 
 ## ------------------------------------------------

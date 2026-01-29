@@ -32,6 +32,11 @@ add_funding_button <- function(input, values) {
 }
 
 add_expense_button <- function(input, values) {
+  #' Add a new expense row to the expenses dataframe
+  #' 
+  #' @param input: Shiny input object
+  #' @param values: reactiveValues containing expenses dataframe
+
   new_row <- data.frame(
     priority = nrow(values$expenses) + 1,
     expense_id = paste0("E-", nrow(values$expenses) + 1),

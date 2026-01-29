@@ -1,15 +1,3 @@
-
-
-library(ggplot2)
-library(plotly)
-library(dplyr)
-library(tidyr)
-library(lubridate)
-library(circlize)
-library(chorddiag)
-
-
-
 # SHORTFALL PLOT
 
 create_shortfall_bar <- function(values) {

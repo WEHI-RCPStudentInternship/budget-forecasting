@@ -1,4 +1,3 @@
-
 # Contains all ui components from ui folder
 # Divided into four sections (pages)
 # 1. Dashboard (default)
@@ -45,7 +44,6 @@ main_ui_layout <- function() {
     
     uiOutput("tab_content"),
     
-
     tags$body(tags$link(rel = "stylesheet", href = "style.css"))
   )
   return (main_platform)

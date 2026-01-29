@@ -141,18 +141,17 @@ create_budget_template_wb <- function() {
 }
 
 write_data_to_excel <- function(wb_object, target_sheet, text, start_row, start_col, end_col = NULL, text_style = NULL, text_style2 = NULL) {
-  # Function that writes and styles output for Excel file.
-  #
-  # Arguments: 
-  # wb_object(Workbook) - Workbook object containing a worksheet
-  # target_sheet(string) - The name of the worksheet to write to 
-  # text(string) - The text to be written into the worksheet
-  # start_row(integer) - The row for text to be written into
-  # start_col(integer) - The first column for text to be written into
-  # end_col(integer) - The last column for text style to be applied to (Optional)
-  # text_style(style) - The 1st style of text to be applied (Optional)
-  # text_style2(style) - The 2nd style of text to be applied (Optional)
-  
+  #' Function that writes and styles output for Excel file.
+  #' 
+  #' @param wb_object(Workbook) - Workbook object containing a worksheet
+  #' @param target_sheet(string) - The name of the worksheet to write to 
+  #' @param text(string) - The text to be written into the worksheet
+  #' @param start_row(integer) - The row for text to be written into
+  #' @param start_col(integer) - The first column for text to be written into
+  #' @param end_col(integer) - The last column for text style to be applied to (Optional)
+  #' @param text_style(style) - The 1st style of text to be applied (Optional)
+  #' @param text_style2(style) - The 2nd style of text to be applied (Optional)
+
   writeData(wb = wb_object, sheet = target_sheet, x = text, startRow = start_row, startCol = start_col)
   
   # Check for end column argument
@@ -182,6 +181,11 @@ DATE_SECTION <- 3
 MAIN_SECTION_HEADER <- 5
 
 create_allocation_report_wb <- function(values) {
+  #' Create Excel workbook for allocation report
+  #' 
+  #' @param values: reactiveValues containing allocation results and funding summary
+  #' @return: wb: Excel workbook object with allocation report structure
+
   style_header_title <- createStyle(fontSize = 16, textDecoration = "bold")
   style_header_border <- createStyle(border = "bottom", borderColour = "black", borderStyle = "medium", textDecoration = "bold")
   style_bold <- createStyle(textDecoration = "bold")

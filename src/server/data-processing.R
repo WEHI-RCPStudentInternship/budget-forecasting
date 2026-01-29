@@ -25,6 +25,7 @@ process_funding_data <- function(df) {
   #' - source_id: Character
   #' - funding_source: Character
   #' - allowed_categories: List of Character
+  #'   (this column from values$funding_sources is a character but will be converted to list after this function)
   #' - valid_from: Date
   #' - valid_to: Date
   #' - amount: Numeric
@@ -83,14 +84,17 @@ process_expense_data <- function(df) {
 }
 
 # Data validation functions
-data_validation <- function(data) {
-  # validate for the values dataframe
-  # this will be called at all time to check at any point the data is invalid
+data_validation <- function(values) {
+  #' Validate for the values dataframe
+  #' This will be called at all time to check at any point the data is invalid
+  #' 
+  #' @param values: reactiveValues containing funding_sources and expenses dataframes
+  #' @return: TRUE if data is valid, FALSE otherwise
 
-  funding_sources <- data$funding_sources
-  expenses <- data$expenses
+  funding_sources <- values$funding_sources
+  expenses <- values$expenses
 
-  # For funding sources
+  # --- For funding sources ---
 
   # valid from should be before valid to
   invalid_funding_dates <- funding_sources %>%
@@ -106,7 +110,7 @@ data_validation <- function(data) {
     showNotification("Error: Some funding sources have negative amounts.", type = "error", duration = NULL)
   }
 
-  # For expenses
+  # --- For expenses ---
 
   # valid categories should be non-empty
   invalid_expense_categories <- expenses %>%

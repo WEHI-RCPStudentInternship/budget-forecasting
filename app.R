@@ -1,11 +1,9 @@
-
 source("src/main_ui.R")
 source("src/main_server.R")
 source("requirements/packages.R")
 
 
 # 1. Installing packages
-
 options(shiny.launch.browser = TRUE)
 run_setup()
 
@@ -28,16 +26,18 @@ library(shinyWidgets)
 library(sortable)
 library(ggplot2)
 library(plotly)
-
-
-# library(Matrix)
-
+library(lubridate)
+library(chorddiag)
+library(ompr)
+library(ompr.roi)
+library(ROI)
+library(ROI.plugin.highs)
+library(magrittr)
+library(rlang)
 
 
 # 3. Load UI
-
 ui <- main_ui_layout()
-
 
 
 # 4. Load Server
@@ -83,12 +83,9 @@ server <- function(input, output, session) {
       status = character()
     )
   )
-  
   main_server_logic(input, output, session, values)
   main_output(input, output, session, values)
-  
 }
-
 
 
 # 5. Run Shiny App
