@@ -407,13 +407,13 @@ activate_allocation_algorithm <- function(sources, expenses) {
 # ExpenseID: ID of the expense being paid (e.g., E004).
 # ExpenseCategory: The category of the expense (e.g., Salary).
 # AllocatedAmount: The exact dollar amount transferred.
-df_allocations
+# df_allocations
 
 
 ## ------------------------------------------------
 # All original columns (ID, Category, Amount, Date) plus:
 # IsFilled: A Boolean (TRUE/FALSE) indicating if the optimization solver selected this expense.
-df_expenses_status
+# df_expenses_status
 
 
 ## ------------------------------------------------
@@ -421,7 +421,7 @@ df_expenses_status
 # InitialAmount: The starting budget.
 # UsedAmount: Total allocated in this solution (sum(x_matrix[i, ])).
 # RemainingAmount: What is left over (Initial - Used).
-df_funds_summary
+# df_funds_summary
 
 
 ## ------------------------------------------------

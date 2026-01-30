@@ -12,7 +12,7 @@ source("src/server/testing.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("dashboard")
   
   clicked_month <- reactiveVal(NULL)
 
@@ -469,7 +469,7 @@ main_server_logic <- function(input, output, session, values) {
   output$shortfall_plot <- renderUI({
     
     if (!all_shortfall()) {
-      tags$p("No data available.")
+      tags$p("No data available.", style = "font-size: 16px; text-align: center;")
     } else {
       plotlyOutput("shortfall_bar_plot", height = "100%")
     }
@@ -482,7 +482,7 @@ main_server_logic <- function(input, output, session, values) {
   output$shortfall_number <- renderUI({
     
     if (!all_shortfall()) {
-      tags$p("No data available.")
+      tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_shortfalls
     }
@@ -491,7 +491,7 @@ main_server_logic <- function(input, output, session, values) {
   output$total_balance <- renderUI({
     
     if (!all_shortfall()) {
-      tags$p("No data available.")
+      tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_balance
     }
@@ -518,9 +518,11 @@ main_server_logic <- function(input, output, session, values) {
   output$circos_container <- renderUI({
     cm <- clicked_month()
 
-    if (is.null(cm)) {
+    if (is.null(cm) && all_shortfall()) {
       tags$p("Click on a month to see the allocation plot.",
              style = "font-size: 16px; text-align: center;")
+    } else if (!all_shortfall()) {
+      tags$p("No data available.", style = "font-size: 16px; text-align: center;")
     } else {
       tagList(
         tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
