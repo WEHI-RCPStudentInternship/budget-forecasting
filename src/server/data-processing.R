@@ -95,7 +95,6 @@ data_validation <- function(values) {
   expenses <- values$expenses
 
   # --- For funding sources ---
-
   # valid from should be before valid to
   invalid_funding_dates <- funding_sources %>%
     filter(!is.na(valid_from) & !is.na(valid_to) & valid_from > valid_to)
@@ -111,7 +110,6 @@ data_validation <- function(values) {
   }
 
   # --- For expenses ---
-
   # valid categories should be non-empty
   invalid_expense_categories <- expenses %>%
     filter(is.na(expense_category) | expense_category == "")

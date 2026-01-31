@@ -98,7 +98,7 @@ input_excel_download <- function(values) {
     setColWidths(wb, "Funding", cols = seq_len(ncol(export_funding)), widths = "auto")
   }
 
-  wb
+  return(wb)
 }
 
 create_budget_template_wb <- function() {
@@ -137,7 +137,7 @@ create_budget_template_wb <- function() {
       check.names = FALSE
     )
   )
-  wb
+  return(wb)
 }
 
 write_data_to_excel <- function(wb_object, target_sheet, text, start_row, start_col, end_col = NULL, text_style = NULL, text_style2 = NULL) {
@@ -234,7 +234,7 @@ create_allocation_report_wb <- function(values) {
   }
 
   
-  # Funding Summary Sheet
+  # --- Funding Summary Sheet ---
   funding_name_map <- c(
     source_id = "Source ID",
     funding_source = "Funding Source",
@@ -269,5 +269,5 @@ create_allocation_report_wb <- function(values) {
     setColWidths(wb, "Funding Summary", cols = ITEM_LABEL_COL:last_col, widths = "auto")
   }
 
-  wb
+  return(wb)
 }

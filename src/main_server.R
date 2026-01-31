@@ -163,56 +163,49 @@ main_server_logic <- function(input, output, session, values) {
 
   available_categories <- reactive({
     # expenses categories (safe)
-    exp_cats <- character(0)
-    if (
-      !is.null(values$expenses) &&
-        is.data.frame(values$expenses) &&
-        "expense_category" %in% names(values$expenses)
-    ) {
-      exp_cats_raw <- values$expenses$expense_category
-      if (is.factor(exp_cats_raw)) {
-        exp_cats_raw <- as.character(exp_cats_raw)
+    expense_categories <- character(0)
+    if (!is.null(values$expenses) && is.data.frame(values$expenses) && "expense_category" %in% names(values$expenses)) {
+      expense_categories_raw <- values$expenses$expense_category
+
+      if (is.factor(expense_categories_raw)) {
+        expense_categories_raw <- as.character(expense_categories_raw)
       }
-      exp_cats <- as.character(exp_cats_raw)
-      exp_cats <- trimws(exp_cats)
-      exp_cats <- exp_cats[!is.na(exp_cats) & nzchar(exp_cats)]
+      expense_categories <- as.character(expense_categories_raw)
+      expense_categories <- trimws(expense_categories)
+      expense_categories <- expense_categories[!is.na(expense_categories) & nzchar(expense_categories)]
     }
 
     # funding allowed categories (list-column or comma-separated)
-    fund_cats <- character(0)
-    if (
-      !is.null(values$funding_sources) &&
-        is.data.frame(values$funding_sources) &&
-        "allowed_categories" %in% names(values$funding_sources)
-    ) {
+    funding_categories <- character(0)
+    if (!is.null(values$funding_sources) && is.data.frame(values$funding_sources) && "allowed_categories" %in% names(values$funding_sources)) {
       ac <- values$funding_sources$allowed_categories
 
       if (is.list(ac)) {
-        fund_cats_raw <- unlist(ac, use.names = FALSE)
+        funding_categories_raw <- unlist(ac, use.names = FALSE)
       } else {
         # atomic vector: might contain comma-separated strings
-        fund_cats_raw <- as.character(ac)
-        fund_cats_raw <- unlist(
-          strsplit(fund_cats_raw[!is.na(fund_cats_raw)], ",\\s*"),
+        funding_categories_raw <- as.character(ac)
+        funding_categories_raw <- unlist(
+          strsplit(funding_categories_raw[!is.na(funding_categories_raw)], ",\\s*"),
           use.names = FALSE
         )
       }
 
-      fund_cats <- trimws(as.character(fund_cats_raw))
-      fund_cats <- fund_cats[!is.na(fund_cats) & nzchar(fund_cats)]
+      funding_categories <- trimws(as.character(funding_categories_raw))
+      funding_categories <- funding_categories[!is.na(funding_categories) & nzchar(funding_categories)]
     }
 
     # combine, dedupe, sort
-    cats <- sort(unique(c(exp_cats, fund_cats)))
+    categories <- sort(unique(c(expense_categories, funding_categories)))
 
-    dr <- drag_order()
-    if (!is.null(dr)) {
+    drag_order <- drag_order()
+    if (!is.null(drag_order)) {
       # Preserve user-defined order
-      dr_filtered <- dr[dr %in% cats]
-      extras <- setdiff(cats, dr_filtered)
-      c(dr_filtered, sort(extras))
+      drag_order_filtered <- drag_order[drag_order %in% categories]
+      extras <- setdiff(categories, drag_order_filtered)
+      c(drag_order_filtered, sort(extras))
     } else {
-      cats
+      categories
     }
   })
 

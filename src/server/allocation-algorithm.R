@@ -4,18 +4,28 @@
 #
 # ----------------------------------------------------
 
-## ------------------------------------------------
-# Input format: DD/MM/YYYY
-# Output format: Integer (Days since base_date)
+
 date_to_int <- function(date_str, base_date) {
+  #' Convert date string "DD/MM/YYYY" to integer days since base_date
+  #' 
+  #' @param date_str Date string in "DD/MM/YYYY" format
+  #' @param base_date Date object representing the base date
+  #' 
+  #' @return Integer number of days since base_date
+
   dt <- as.Date(date_str, format = "%d/%m/%Y")
   # Return numeric difference + 1 (so the first day is Day 1, not Day 0)
   return(as.numeric(dt - base_date) + 1)
 }
 
-
 build_compatibility_matrix <- function(sources, expenses) {
-  
+  #' Build a compatibility matrix between funding sources and expenses
+  #'
+  #' @param sources DataFrame of funding sources
+  #' @param expenses DataFrame of expenses
+  #'
+  #' @return A compatibility matrix (data.frame) indicating valid funding sources for each expense
+
   # Dynamically setting the time
   # 1. Collect all date columns from both dataframes
   all_dates <- c(sources$valid_from, sources$valid_to, expenses$latest_payment_date)
@@ -28,7 +38,6 @@ build_compatibility_matrix <- function(sources, expenses) {
   n_sources <- nrow(sources)
   n_expenses <- nrow(expenses)
   
-  ## ------------------------------------------------
   # This is a matrix with size n_sources x n_expenses (row is each funding sources, and column is each expenses sources), such that if the payment date of the expense fall within the valid from and valid to of the funding AND categories of the expense match with the allowed category of the source, then it will be marked as 1, otherwise 0
   # We build a Compatibility Matrix (Valid = 1, Invalid = 0)
   compatibility <- matrix(0, nrow = n_sources, ncol = n_expenses)
@@ -59,16 +68,20 @@ build_compatibility_matrix <- function(sources, expenses) {
   }
   
   return (compatibility)
-  
 }
 
-
 solve_constraint_model <- function(sources, expenses, compatibility) {
+  #' Solve the MIP model for funding allocation
+  #'
+  #' @param sources DataFrame of funding sources
+  #' @param expenses DataFrame of expenses
+  #' @param compatibility Compatibility matrix between sources and expenses
+  #' 
+  #' @return The result of the solved MIP model
   
   n_sources <- nrow(sources)
   n_expenses <- nrow(expenses)
   
-  ## ------------------------------------------------
   # Maximise Sum(Weight_j * y_j)
   # Coefficients for x[i,j] are 0. Coefficients for y[j] are the weights.
   # It works because $$2^k > \sum_{i=0}^{k-1} 2^i$$, so it will always incentivise to use the funding to fulfil the expenses with higher priority
@@ -102,18 +115,22 @@ solve_constraint_model <- function(sources, expenses, compatibility) {
     # If compatibility[i, j] == 0, then x[i, j] must be 0
     add_constraint(x[i, j] == 0, i = 1:n_sources, j = 1:n_expenses, compatibility[i, j] == 0)
   
-  
-  
-  ## ------------------------------------------------
   result <- solve_model(model, with_ROI(solver = "highs"))
   
   return (result)
-  
 }
 
 
-## ------------------------------------------------
+
 apply_greedy_fill <- function(result, sources, expenses, compatibility) {
+  #' Apply a greedy fill algorithm to allocate remaining funds to unfunded expenses
+  #'
+  #' @param result The result of the solved MIP model
+  #' @param sources DataFrame of funding sources
+  #' @param expenses DataFrame of expenses
+  #' @param compatibility Compatibility matrix between sources and expenses
+  #' 
+  #' @return A matrix representing the final allocation of funds to expenses
   
   n_sources <- nrow(sources)
   n_expenses <- nrow(expenses)
@@ -159,8 +176,6 @@ apply_greedy_fill <- function(result, sources, expenses, compatibility) {
   return(mat_x)
 }
 
-
-## ------------------------------------------------
 print_financial_report <- function(mat_x, sources, expenses) {
   
   n_sources <- nrow(sources)
@@ -234,18 +249,39 @@ print_financial_report <- function(mat_x, sources, expenses) {
   cat(sprintf("TOTAL UNUSED FUNDS: $%s\n", format(total_unused, big.mark=",")))
 }
 
-
-## ------------------------------------------------
 create_financial_dfs <- function(mat_x, sources, expenses) {
-  
+  #' Create DataFrames for allocations, expense status, and funds summary
+  #'
+  #' @param mat_x Final allocation matrix
+  #' @param sources DataFrame of funding sources
+  #' @param expenses DataFrame of expenses
+  #'
+  #' @return A list containing three DataFrames: allocations, expenses status, and funds summary
+  #' @details
+  #' df_allocations:
+  #' SourceID: ID of the funding source (e.g., FS001).
+  #' ExpenseID: ID of the expense being paid (e.g., E004).
+  #' ExpenseCategory: The category of the expense (e.g., Salary).
+  #' AllocatedAmount: The exact dollar amount transferred.
+  #'
+  #' df_expenses_status:
+  #' All original columns (ID, Category, Amount, Date) plus:
+  #' IsFilled: A Boolean (TRUE/FALSE) indicating if the optimization solver selected this expense.
+  #'
+  #' df_funds_summary:
+  #' SourceID: ID of the fund.
+  #' InitialAmount: The starting budget.
+  #' UsedAmount: Total allocated in this solution (sum(x_matrix[i, ])).
+  #' RemainingAmount: What is left over (Initial - Used).
+
   n_sources <- nrow(sources)
   n_expenses <- nrow(expenses)
-  
+
   # --- 1. Allocations DataFrame ---
   # Find all non-zero entries in the matrix
   # which(..., arr.ind=TRUE) returns a matrix of [row_index, col_index]
   alloc_idx <- which(mat_x > 1e-6, arr.ind = TRUE)
-  
+
   # Construct the dataframe directly from indices
   df_allocations <- data.frame(
     source_id = sources$source_id[alloc_idx[, 1]],
@@ -254,28 +290,32 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
     allocated_amount = mat_x[alloc_idx]
   )
   # Optional: Sort by Source then Expense
-  df_allocations <- df_allocations[order(df_allocations$source_id, df_allocations$expense_id), ]
-  
-  
+  df_allocations <- df_allocations[
+    order(df_allocations$source_id, df_allocations$expense_id),
+  ]
+
   # --- 2. Expense Status DataFrame ---
   # Calculate how much was allocated to each expense (Column Sums)
   expense_filled_amounts <- colSums(mat_x)
-  
+
   df_expenses_status <- expenses
   df_expenses_status$filled_amount <- expense_filled_amounts
-  
+
   # Determine status: Fully Filled if allocated >= requested (minus tiny error)
-  df_expenses_status$is_filled <- expense_filled_amounts >= (expenses$planned_amount - 1e-5)
-  
+  df_expenses_status$is_filled <- expense_filled_amounts >=
+    (expenses$planned_amount - 1e-5)
+
   # Add a readable Status column
-  df_expenses_status$status <- ifelse(df_expenses_status$is_filled, "Full",
-                                      ifelse(df_expenses_status$filled_amount > 1e-6, "Partial", "Unfunded"))
-  
-  
+  df_expenses_status$status <- ifelse(
+    df_expenses_status$is_filled,
+    "Full",
+    ifelse(df_expenses_status$filled_amount > 1e-6, "Partial", "Unfunded")
+  )
+
   # --- 3. Funds Summary DataFrame ---
   # Calculate how much each source used (Row Sums)
   source_used_amounts <- rowSums(mat_x)
-  
+
   df_funds_summary <- data.frame(
     source_id = sources$source_id,
     initial_amount = sources$amount,
@@ -284,7 +324,7 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   )
   # Clean up negative zeros
   df_funds_summary$remaining_amount[df_funds_summary$remaining_amount < 0] <- 0
-  
+
   # Return all 3 as a named list
   return(list(
     allocations = df_allocations,
@@ -293,9 +333,13 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   ))
 }
 
-
 activate_allocation_algorithm <- function(sources, expenses) {
-  ## ------------------------------------------------
+  #' Main function to run the allocation algorithm
+  #'
+  #' @param sources DataFrame of funding sources
+  #' @param expenses DataFrame of expenses
+  #' 
+  #' @return A list containing three DataFrames: allocations, expenses status, and funds summary
   
   compatibility <- build_compatibility_matrix(sources, expenses)
   
@@ -306,7 +350,7 @@ activate_allocation_algorithm <- function(sources, expenses) {
     # Partial fill
     final_matrix <- apply_greedy_fill(result, sources, expenses, compatibility)
     
-    # Print report in R
+    # Print report in R for testing
     # print_financial_report(final_matrix, sources, expenses)
     
     # Generate DataFrames
@@ -323,29 +367,3 @@ activate_allocation_algorithm <- function(sources, expenses) {
   
   return (dfs)
 }
-
-
-## ------------------------------------------------
-# SourceID: ID of the funding source (e.g., FS001).
-# ExpenseID: ID of the expense being paid (e.g., E004).
-# ExpenseCategory: The category of the expense (e.g., Salary).
-# AllocatedAmount: The exact dollar amount transferred.
-#df_allocations
-
-
-## ------------------------------------------------
-# All original columns (ID, Category, Amount, Date) plus:
-# IsFilled: A Boolean (TRUE/FALSE) indicating if the optimization solver selected this expense.
-#df_expenses_status
-
-
-## ------------------------------------------------
-# SourceID: ID of the fund.
-# InitialAmount: The starting budget.
-# UsedAmount: Total allocated in this solution (sum(x_matrix[i, ])).
-# RemainingAmount: What is left over (Initial - Used).
-#df_funds_summary
-
-
-## ------------------------------------------------
-# knitr::purl(input = "Complete_Algorithm_Alternative.Rmd", output = "Complete_Algorithm_Alternative.R")
