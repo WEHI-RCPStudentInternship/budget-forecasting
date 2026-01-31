@@ -18,6 +18,7 @@ library(ompr.roi)
 library(ROI)
 library(ROI.plugin.highs)
 library(magrittr)
+library(dplyr)
 ```
 
 ```{r}
