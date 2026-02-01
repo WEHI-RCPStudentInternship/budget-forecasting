@@ -17,16 +17,25 @@ main_server_logic <- function(input, output, session, values) {
   clicked_month <- reactiveVal(NULL)
 
   # --- Data Validation ---
+  errors <- reactiveVal(NULL)
   observe({
-    correct_format_data <- data_validation(values)
-  }) %>%
-    bindEvent(
-      values$funding_sources,
-      values$expenses,
-      ignoreNULL = FALSE
-    )
-  
+    req(values$funding_sources)
+    req(values$expenses)
+    validation_errors <- c()
+    
+    funding_errors <- data_validation(values$funding_sources, type = "funding")
+    expense_errors <- data_validation(values$expenses, type = "expense")
+    
+    validation_errors <- c(funding_errors, expense_errors)
+    
+    errors(validation_errors)
+  })
 
+  observe({
+    for (error in errors()) {
+      showNotification(error, type = "error", duration = NULL)
+    }
+  }) %>% bindEvent(errors(), ignoreInit = TRUE)
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -238,7 +247,7 @@ main_server_logic <- function(input, output, session, values) {
     tryCatch({
       data_list <- read_excel_data(path)
       funding_sources_df <- data_list$funding_sources
-      expense_df <- data_list$expense
+      expense_df <- data_list$expenses
 
       values$funding_sources <- funding_sources_df
       values$expenses <- expense_df
