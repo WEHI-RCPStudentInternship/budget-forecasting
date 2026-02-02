@@ -53,18 +53,21 @@ create_shortfall_bar <- function(values) {
       )
     )
   
-  print("full_df")
-  print(df)
+  # print("ordered full_df")
+  
+  ordered_df <- df %>% arrange(expense_date)
+  # print(ordered_df)
   
   
   # Dataframe including range of months involved in the allocation and prepping
   # for final shortfall dataframe
   months <- seq(
-    from = min(df$expense_date_month),
+    from = min(floor_date(expenses$latest_payment_date, "month")),
     to = max(df$valid_to_month),
     by = "1 month"
   )
   months_df <- tibble(Month = months)
+  # print(months_df)
   
   # ---------------------- EXTRACTING DISTINCT EXPENSES ------------------------
   
@@ -83,8 +86,8 @@ create_shortfall_bar <- function(values) {
     )
   
   
-  print("unallocated_distinct_expense")
-  print(unallocated_distinct_expense)
+  # print("unallocated_distinct_expense")
+  # print(unallocated_distinct_expense)
   
 
   # 2. Extracting allocated distinct expenses (and partial allocation)
@@ -118,11 +121,11 @@ create_shortfall_bar <- function(values) {
   # Combining dataframe and recording shortfall timeline after
   # each expense latest payment date
   expense_month_grid <- all_distinct_expenses %>%
-    #mutate(expense_date_month = floor_date(expense_date_month, "month")) %>%
+    mutate(expense_date_month = floor_date(expense_date_month, "month")) %>%
     crossing(months_df) %>%
     filter(Month >= expense_date_month)
-  print("expense_month_grid")
-  print(expense_month_grid)
+  # print("expense_month_grid")
+  # print(expense_month_grid)
 
   
   # Dataframe showing cumulative shortfalls for each expense across all months
@@ -134,14 +137,14 @@ create_shortfall_bar <- function(values) {
       is_short = shortfall < 0,
       is_overdue = is_short & (Month > expense_date_month)
     )
-  print("expenses_month_status")
-  print(expenses_month_status, n = Inf)
+  # print("expenses_month_status")
+  # print(expenses_month_status, n = Inf)
   
   filter_shortfall_df <- expenses_month_status %>%
     filter(shortfall < 0)
   
-  print("filter_shortfall")
-  print(filter_shortfall_df, n = Inf)
+  # print("filter_shortfall")
+  # print(filter_shortfall_df, n = Inf)
   
 
   # Final monthly shortfall dataframe 
@@ -163,8 +166,8 @@ create_shortfall_bar <- function(values) {
     ) %>%
     arrange(Month)
   
-  print("monthly_shortfall")
-  print(monthly_shortfall)
+  # print("monthly_shortfall")
+  # print(monthly_shortfall)
   
   shortfall_num <- expenses_month_status %>%
     filter(is_short == TRUE)
@@ -244,7 +247,7 @@ create_shortfall_bar <- function(values) {
         list(
           text = "Total Shortfall Amount",
           x = 0.5,
-          y = -0.07,
+          y = -0.12,
           xref = "paper",
           yref = "paper",
           xanchor = "center",
@@ -275,7 +278,7 @@ create_circos_plot <- function(values, month) {
   #allocation should be done within the month of the latest payment date
   # if funding has a big interval.
   
-  #print(month)
+  print(month)
   
   df_allocations <- values$allocation_result
   funding <- values$funding_sources
@@ -312,9 +315,23 @@ create_circos_plot <- function(values, month) {
   #print(sectors)
   
   
+  # rows_until_month <- full_allocation_df %>%
+  #   filter(valid_from < month)
+  # print(rows_until_month)
+  print(full_allocation_df)
+  
   rows_until_month <- full_allocation_df %>%
-    filter(valid_from < month)
-  #print(rows_until_month)
+    mutate(
+      allocation_date = if_else(
+        expense_date >= valid_from & expense_date <= valid_to,
+        expense_date,
+        valid_from
+      )
+    ) %>%
+    filter(allocation_date < month)
+    
+  
+  print(rows_until_month)
   
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors

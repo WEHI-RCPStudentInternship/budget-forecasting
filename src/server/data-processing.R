@@ -37,6 +37,7 @@ process_funding_data <- function(df) {
   # - valid_to: Date
   # - amount: Numeric
 
+  print(df)
   funding_sources_df <- df %>%
     select(`Source ID`, `Funding Source`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
     setNames(nm = c("source_id", "funding_source", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
@@ -99,7 +100,7 @@ process_expense_data <- function(df) {
 data_validation <- function(df, type) {
   
   errors <- c()
-
+  
   # Validate funding sources
   if (type == "funding") {
     funding_sources <- df
@@ -108,41 +109,41 @@ data_validation <- function(df, type) {
     if (nrow(invalid_funding_dates) > 0) {
       errors <- c(errors, "Error: Some funding sources have 'valid_from' date later than 'valid_to' date.")
     }
-
+    
     required_funding_columns <- c("source_id", "funding_source", "allowed_categories", "amount", "valid_from", "valid_to")
     for (column in required_funding_columns) {
       if (any(is.na(funding_sources[[column]]))) {
         errors <- c(errors, paste("Error: Funding column", column, "contains missing values."))
       }
     }
-
+    
     # Check for duplicate funding sources
     duplicate_funding_ids <- funding_sources %>%
       group_by(source_id) %>%
       filter(n() > 1) %>%
       distinct(source_id)
-
+    
     if (nrow(duplicate_funding_ids) > 0) {
       errors <- c(errors, "Error: Duplicate funding source IDs found.")
     }
-
+    
     # Check for negative amounts in funding sources
     if (any(funding_sources$amount < 0, na.rm = TRUE)) {
       errors <- c(errors, "Error: Negative amounts found in funding sources.")
     }
   } 
-
+  
   # Validate expenses
   else if (type == "expense") {
     expenses <- df
-
+    
     required_expense_columns <- c("expense_id", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "priority")
     for (column in required_expense_columns) {
       if (any(is.na(expenses[[column]]))) {
         errors <- c(errors, paste("Error: Expense column", column, "contains missing values."))
       }
     }
-
+    
     # Check for duplicate expense IDs
     duplicate_expense_ids <- expenses %>%
       group_by(expense_id) %>%
@@ -151,7 +152,7 @@ data_validation <- function(df, type) {
     if (nrow(duplicate_expense_ids) > 0) {
       errors <- c(errors, "Error: Duplicate expense IDs found.")
     }
-
+    
     # Check for negative amounts in expenses
     if (any(expenses$planned_amount < 0, na.rm = TRUE)) {
       errors <- c(errors, "Error: Negative planned amounts found in expenses.")
