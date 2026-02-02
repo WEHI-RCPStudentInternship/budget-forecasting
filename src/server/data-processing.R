@@ -37,6 +37,7 @@ process_funding_data <- function(df) {
   # - valid_to: Date
   # - amount: Numeric
 
+  print(df)
   funding_sources_df <- df %>%
     select(`Source ID`, `Funding Source`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
     setNames(nm = c("source_id", "funding_source", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
@@ -157,6 +158,16 @@ data_validation <- function(df, type) {
       errors <- c(errors, "Error: Negative planned amounts found in expenses.")
     }
   }
+<<<<<<< HEAD
   
   return(errors)
 }
+=======
+}
+
+
+
+
+
+
+>>>>>>> 95f898e (changed output tables headers)

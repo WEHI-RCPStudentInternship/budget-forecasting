@@ -53,18 +53,21 @@ create_shortfall_bar <- function(values) {
       )
     )
   
-  print("full_df")
-  print(df)
+  print("ordered full_df")
+  
+  ordered_df <- df %>% arrange(expense_date)
+  print(ordered_df)
   
   
   # Dataframe including range of months involved in the allocation and prepping
   # for final shortfall dataframe
   months <- seq(
-    from = min(df$expense_date_month),
+    from = min(floor_date(expenses$latest_payment_date, "month")),
     to = max(df$valid_to_month),
     by = "1 month"
   )
   months_df <- tibble(Month = months)
+  print(months_df)
   
   # ---------------------- EXTRACTING DISTINCT EXPENSES ------------------------
   
@@ -94,8 +97,8 @@ create_shortfall_bar <- function(values) {
   # print(distinct_expenses)
   
   all_distinct_expenses <- bind_rows(distinct_expenses, unallocated_distinct_expense)
-  # print("all_distinct_expenses")
-  # print(all_distinct_expenses)
+  print("all_distinct_expenses")
+  print(all_distinct_expenses)
   
   
   # ----------------------------------------------------------------------------
@@ -118,7 +121,7 @@ create_shortfall_bar <- function(values) {
   # Combining dataframe and recording shortfall timeline after
   # each expense latest payment date
   expense_month_grid <- all_distinct_expenses %>%
-    #mutate(expense_date_month = floor_date(expense_date_month, "month")) %>%
+    mutate(expense_date_month = floor_date(expense_date_month, "month")) %>%
     crossing(months_df) %>%
     filter(Month >= expense_date_month)
   print("expense_month_grid")
@@ -244,7 +247,7 @@ create_shortfall_bar <- function(values) {
         list(
           text = "Total Shortfall Amount",
           x = 0.5,
-          y = -0.07,
+          y = -0.12,
           xref = "paper",
           yref = "paper",
           xanchor = "center",

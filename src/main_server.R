@@ -11,6 +11,7 @@ source("src/server/edit-rows.R")
 source("src/server/testing.R")
 
 main_server_logic <- function(input, output, session, values) {
+  
   # Current page
   current_view <- reactiveVal("dashboard")
   
@@ -19,6 +20,7 @@ main_server_logic <- function(input, output, session, values) {
   # --- Data Validation ---
   errors <- reactiveVal(NULL)
   observe({
+<<<<<<< HEAD
     req(values$funding_sources)
     req(values$expenses)
     validation_errors <- c()
@@ -30,6 +32,16 @@ main_server_logic <- function(input, output, session, values) {
     
     errors(validation_errors)
   })
+=======
+    correct_format_data <- data_validation(values)
+  }) %>%
+    bindEvent(
+      values$funding_sources,
+      values$expenses,
+      ignoreNULL = TRUE
+    )
+  
+>>>>>>> 95f898e (changed output tables headers)
 
   observe({
     for (error in errors()) {
@@ -58,6 +70,7 @@ main_server_logic <- function(input, output, session, values) {
   observe({
     showNotification(
       "Allocation Finished. Go to Dashboard for result.",
+      type = "message",
       duration = 3
     )
   }) |>
@@ -543,22 +556,63 @@ main_server_logic <- function(input, output, session, values) {
   
   
   # --- OUTPUT: Dashboard Result Tables ---
+  display_budget_allocation_names <- c(
+    expense_id = "Expense ID",
+    source_id = "Source ID",
+    expense_category = "Expense Category",
+    planned_amount = "Expense Amount",
+    allocated_amount = "Allocated Amount",
+    latest_payment_date = "Payment Date",
+    status = "Allocation Status"
+  )
+  
+  display_unallocated_funding_names <- c(
+    source_id = "Source ID",
+    funding_source = "Funding Source",
+    initial_amount = "Initial Amount",
+    used_amount = "Used Amount",
+    remaining_amount = "Remaining Amount"
+  )
+  
   output$budget_allocation_table <- renderDT({
     req(values$allocation_result)
-    df <- values$allocation_result
+    req(values$expense_status)
+    allocation_df <- values$allocation_result
+    expense_status_df <- values$expense_status
     
-    datatable(
-      df
-    )
+    df <- allocation_df %>%
+      left_join(
+        expense_status_df %>%
+          select(
+            expense_id,
+            expense_category,
+            planned_amount,
+            latest_payment_date,
+            status
+          ), by = c("expense_id", "expense_category"))
+      
+    colnames(df) <- display_budget_allocation_names[names(df)]
+    
+    datatable(df)
     
   })
   
   output$unallocated_funding_table <- renderDT({
-    df <- values$funding_summary
+    funding_df <- values$funding_sources
+    funding_summary_df <- values$funding_summary
     
-    datatable(
-      df
-    )
+    df <- funding_summary_df %>%
+      left_join(
+        funding_df %>% 
+          select(
+            source_id,
+            funding_source
+          ), by = "source_id") %>%
+      relocate(funding_source, .before = initial_amount)
+    
+    colnames(df) <- display_unallocated_funding_names[names(df)]
+    
+    datatable(df)
   })
   
   
