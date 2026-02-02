@@ -20,7 +20,6 @@ main_server_logic <- function(input, output, session, values) {
   # --- Data Validation ---
   errors <- reactiveVal(NULL)
   observe({
-<<<<<<< HEAD
     req(values$funding_sources)
     req(values$expenses)
     validation_errors <- c()
@@ -32,16 +31,7 @@ main_server_logic <- function(input, output, session, values) {
     
     errors(validation_errors)
   })
-=======
-    correct_format_data <- data_validation(values)
-  }) %>%
-    bindEvent(
-      values$funding_sources,
-      values$expenses,
-      ignoreNULL = TRUE
-    )
-  
->>>>>>> 95f898e (changed output tables headers)
+
 
   observe({
     for (error in errors()) {
