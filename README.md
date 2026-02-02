@@ -18,6 +18,11 @@
 
 ## 1. Links
 
+- Fast Track report [link](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/2025%20Summer/Presentation%20and%20Formal%20Reports/Fast-track%20Report.docx?d=we00883216ea24fa7aa48c4a65b73be05&csf=1&web=1&e=cKiZhd)
+- Final Report powerpoint [link]
+
+
+
 ---
 
 ## 2. Getting Started
@@ -35,7 +40,7 @@ You will need **R** (version 4.4.1) and **RStudio** installed on your machine.
 1.  **Clone the repository:**
 
     ``` bash
-    git clone [https://github.com/narolinelim/forecasting-with-workday-project.git](https://github.com/narolinelim/forecasting-with-workday-project.git)
+    git clone https://github.com/narolinelim/forecasting-with-workday-project.git
     ```
 
 2.  **Run the app**
