@@ -186,7 +186,7 @@ create_allocation_report_wb <- function(values) {
   style_currency <- createStyle(numFmt = "$#,##0.00")
   style_grand_total <- createStyle(fontSize = 12, textDecoration = "bold")
 
-  allocation_result <- values$allocation_result
+  allocation_result <- values$full_budget_allocation_df
   funding_summary <- values$funding_summary
 
 
@@ -194,10 +194,13 @@ create_allocation_report_wb <- function(values) {
   
   # --- Allocation Result Sheet ---
   allocation_name_map <- c(
-    SourceID = "Source ID",
-    ExpenseID = "Expense ID",
-    ExpenseCategory = "Expense Category",
-    AllocatedAmount = "Allocated Amount"
+    source_id = "Source ID",
+    expense_id = "Expense ID",
+    expense_category = "Expense Category",
+    allocated_amount = "Allocated Amount",
+    planned_amount = "Expense Amount",
+    latest_payment_date = "Payment Date",
+    status = "Allocation Status"
   )
   
   addWorksheet(wb, "Allocation Result")

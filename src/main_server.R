@@ -465,6 +465,7 @@ main_server_logic <- function(input, output, session, values) {
     values$allocation_result <- allocation_data$allocations
     values$funding_summary <- allocation_data$funds
     values$expense_status <- allocation_data$expenses
+    values$full_budget_allocation_df <- allocation_data$full_allocation_data
   })
   
 
@@ -549,11 +550,11 @@ main_server_logic <- function(input, output, session, values) {
   
   # --- OUTPUT: Dashboard Result Tables ---
   display_budget_allocation_names <- c(
-    expense_id = "Expense ID",
     source_id = "Source ID",
+    expense_id = "Expense ID",
     expense_category = "Expense Category",
-    planned_amount = "Expense Amount",
     allocated_amount = "Allocated Amount",
+    planned_amount = "Expense Amount",
     latest_payment_date = "Payment Date",
     status = "Allocation Status"
   )
@@ -567,22 +568,10 @@ main_server_logic <- function(input, output, session, values) {
   )
   
   output$budget_allocation_table <- renderDT({
-    req(values$allocation_result)
-    req(values$expense_status)
-    allocation_df <- values$allocation_result
-    expense_status_df <- values$expense_status
+    req(values$full_budget_allocation_df)
+    df <- values$full_budget_allocation_df
+    print(df)
     
-    df <- allocation_df %>%
-      left_join(
-        expense_status_df %>%
-          select(
-            expense_id,
-            expense_category,
-            planned_amount,
-            latest_payment_date,
-            status
-          ), by = c("expense_id", "expense_category"))
-      
     colnames(df) <- display_budget_allocation_names[names(df)]
     
     datatable(df)

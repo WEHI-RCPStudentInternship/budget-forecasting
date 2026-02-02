@@ -362,11 +362,23 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   # Clean up negative zeros
   df_funds_summary$remaining_amount[df_funds_summary$remaining_amount < 0] <- 0
   
+  df_full_allocation <- df_allocations %>%
+    left_join(
+      df_expenses_status %>%
+        select(
+          expense_id,
+          expense_category,
+          planned_amount,
+          latest_payment_date,
+          status
+        ), by = c("expense_id", "expense_category"))
+  
   # Return all 3 as a named list
   return(list(
     allocations = df_allocations,
     expenses = df_expenses_status,
-    funds = df_funds_summary
+    funds = df_funds_summary,
+    full_allocation_data = df_full_allocation
   ))
 }
 
@@ -388,6 +400,7 @@ activate_allocation_algorithm <- function(sources, expenses) {
     
     # Generate DataFrames
     dfs <- create_financial_dfs(final_matrix, sources, expenses)
+    
     
     df_allocations <- dfs$allocations
     df_expenses_status <- dfs$expenses
