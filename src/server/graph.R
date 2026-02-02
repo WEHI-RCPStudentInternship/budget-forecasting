@@ -315,8 +315,22 @@ create_circos_plot <- function(values, month) {
   #print(sectors)
   
   
+  # rows_until_month <- full_allocation_df %>%
+  #   filter(valid_from < month)
+  # print(rows_until_month)
+  print(full_allocation_df)
+  
   rows_until_month <- full_allocation_df %>%
-    filter(valid_from < month)
+    mutate(
+      allocation_date = if_else(
+        expense_date >= valid_from & expense_date <= valid_to,
+        expense_date,
+        valid_from
+      )
+    ) %>%
+    filter(allocation_date < month)
+    
+  
   print(rows_until_month)
   
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
