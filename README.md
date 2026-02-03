@@ -18,9 +18,9 @@
 
 ## 1. Links
 
+- Live Demo: [link]
 - Fast Track report [link](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/2025%20Summer/Presentation%20and%20Formal%20Reports/Fast-track%20Report.docx?d=we00883216ea24fa7aa48c4a65b73be05&csf=1&web=1&e=cKiZhd)
 - Final Report powerpoint [link]
-
 
 
 ---
@@ -175,4 +175,12 @@ The function should explicity return a value using the `return()` statement, rat
 - Deployment of the app on a cloud platform for testing.
 
 ---
+
+## 6. Resources & Documentation
+
+#### 6.1 Handbooks
+
+- [**User Manual**](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/Summer%202025-2026/PRESENTATION%20AND%20FORMAL%20REPORTS/User%20Manual.docx?d=w7c8aa2a0ff304e09bc794a126d1b848f&csf=1&web=1&e=wTcszP)
+
+
 
