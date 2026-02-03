@@ -13,7 +13,7 @@ read_excel_data <- function(file_path, sheet_name) {
     process_expense_data()
 
   showNotification("Data uploaded successfully.", type = "message", duration = 5)
-  return(list(funding_sources = funding_sources_df, expense = expense_df))
+  return(list(funding_sources = funding_sources_df, expenses = expense_df))
 }
 
 process_funding_data <- function(df) {
@@ -32,6 +32,7 @@ process_funding_data <- function(df) {
   #' - amount: Numeric
   #' - notes: Character
 
+  print(df)
   funding_sources_df <- df %>%
     select(`Source ID`, `Funding Source`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
     setNames(nm = c("source_id", "funding_source", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
@@ -56,17 +57,18 @@ process_funding_data <- function(df) {
 }
 
 process_expense_data <- function(df) {
-  #' Read the dataframe, select and rename columns for the expense data
-  #'
-  #' @param df: data frame read from the excel sheet
-  #' 
-  #' @return: expense_df: processed expense data frame
-  #'
-  #' Dataframe structure:
-  #' - item_id: Character
-  #' - expense_category: Character
-  #' - planned_amount: Numeric
-  #' - latest_payment_date: Date
+  # Read the dataframe, select and rename columns for the expense data
+  #
+  # Arguments:
+  # df: data frame read from the excel sheet
+  # Returns:
+  # expense_df: processed expense data frame
+  # 
+  # Dataframe structure:
+  # - expense_id: Character
+  # - expense_category: Character
+  # - planned_amount: Numeric
+  # - latest_payment_date: Date
   
   expense_df <- df %>%
     select(`Priority`, `Expense ID`, `Expense Name`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
@@ -74,9 +76,13 @@ process_expense_data <- function(df) {
 
     # Convert data types
     mutate(
-      latest_payment_date = as.Date(latest_payment_date),
+      priority = as.integer(priority),
+      expense_id = as.character(expense_id),
+      expense_name = as.character(expense_name),
+      expense_category = as.character(expense_category),
       planned_amount = as.numeric(planned_amount),
-      expense_id = as.character(expense_id)
+      latest_payment_date = as.Date(latest_payment_date),
+      notes = as.character(notes)
     ) %>%
 
     # Remove rows with NA in expense_id
@@ -86,17 +92,15 @@ process_expense_data <- function(df) {
 }
 
 # Data validation functions
-data_validation <- function(values) {
-  #' Validate for the values dataframe
-  #' This will be called at all time to check at any point the data is invalid
-  #' 
-  #' @param values: reactiveValues containing funding_sources and expenses dataframes
-  #' @return: TRUE if data is valid, FALSE otherwise
+data_validation <- function(data) {
+  # validate for the values dataframe
+  # this will be called at all time to check at any point the data is invalid
 
-  funding_sources <- values$funding_sources
-  expenses <- values$expenses
+  funding_sources <- data$funding_sources
+  expenses <- data$expenses
 
-  # --- For funding sources ---
+  # For funding sources
+
   # valid from should be before valid to
   invalid_funding_dates <- funding_sources %>%
     filter(!is.na(valid_from) & !is.na(valid_to) & valid_from > valid_to)
@@ -111,7 +115,8 @@ data_validation <- function(values) {
     showNotification("Error: Some funding sources have negative amounts.", type = "error", duration = NULL)
   }
 
-  # --- For expenses ---
+  # For expenses
+
   # valid categories should be non-empty
   invalid_expense_categories <- expenses %>%
     filter(is.na(expense_category) | expense_category == "")

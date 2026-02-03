@@ -85,9 +85,6 @@ hr {
 
 
 
-
-
-
 /* FORECAST PAGE */
 
 .card-title {
@@ -105,11 +102,9 @@ hr {
 }
 
 #left-upload {
-  display: flex;
   align-items: center;
   gap: 20px;
-  flex: 1;
-  min-width: 0;
+  width: 100%;
 }
 
 #left-upload .shiny-input-container {
@@ -117,15 +112,16 @@ hr {
 }
 
 #left-upload .input-group {
-  display: flex;
   align-items: center;
   width: 100%;
-  flex: 1;
-  min-width: 0;
 }
 
 #left-upload .input-group-btn.input-group-prepend {
   flex: 0 0 auto;
+}
+
+#left-upload .progress-bar {
+  width: 800px !important;
 }
 
 .btn.btn-default.btn-file {
@@ -152,7 +148,7 @@ hr {
 
 #left-upload .shiny-file-input-progress {
   margin-top: 8px;
-  width: auto;
+  width: 800px;
 }
 
 #right-download {

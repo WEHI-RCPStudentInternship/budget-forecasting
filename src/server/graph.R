@@ -1,10 +1,36 @@
 create_shortfall_bar <- function(values) {
-  #' Create shortfall bar plot
-  #' 
-  #' @param values: reactiveValues containing funding_sources, and expenses
-  #' 
-  #' @return list of total_balance, shortfall plots, and total shortfall
-
+  
+  # This works if we ignore overdue payment
+  #
+  # date_ordered_allocation <- ordered_allocation[order(ordered_allocation$Date),]
+  # 
+  # date_ordered_allocation$shortfall <- date_ordered_allocation$Allocated - date_ordered_allocation$Amount
+  # 
+  # expense_shortfall <- date_ordered_allocation %>%
+  #   filter(shortfall < 0) %>%
+  #   mutate(StartMonth = floor_date(Date, "month"))
+  # 
+  # months <- seq(
+  #   from = floor_date(min(date_ordered_allocation$Date), "month"),
+  #   to = floor_date(max(date_ordered_allocation$Date), "month"),
+  #   by = "1 month"
+  # )
+  # 
+  # monthly_shortfall <- expense_shortfall %>%
+  #   rowwise() %>%
+  #   mutate(Month = list(months[months >= StartMonth])) %>%
+  #   unnest(Month) %>%
+  #   ungroup() %>%
+  #   group_by(Month) %>%
+  #   summarise(
+  #     TotalShortfall = sum(shortfall),
+  #     NumberOfShortfalls = n(),
+  #     .groups = "drop"
+  #   )
+  # 
+  # total_shortfalls <- tail(monthly_shortfall$NumberOfShortfalls, n = 1)
+  # 
+  
   df_allocations <- values$allocation_result
   funding <- values$funding_sources
   df_expenses_status <- values$expense_status

@@ -81,6 +81,15 @@ server <- function(input, output, session) {
       filled_amount = numeric(),
       is_filled = logical(),
       status = character()
+    ),
+    full_budget_allocation_df = data.frame(
+      source_id = character(),
+      expense_id = character(),
+      expense_category = character(),
+      allocated_amount = numeric(),
+      planned_amount = numeric(),
+      latest_payment_date = as.Date(character()),
+      status = character()
     )
   )
   main_server_logic(input, output, session, values)

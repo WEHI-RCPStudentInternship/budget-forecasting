@@ -6,12 +6,13 @@ source("src/server/graph.R")
 source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
+  
   # Current page
   current_view <- reactiveVal("forecast")
-
+  
   clicked_month <- reactiveVal(NULL)
 
-  # --- EVENT: Data Validation ---
+  # --- Data Validation ---
   observe({
     correct_format_data <- data_validation(values)
   }) %>%
@@ -20,8 +21,10 @@ main_server_logic <- function(input, output, session, values) {
       values$expenses,
       ignoreNULL = FALSE
     )
+  
 
-  # --- EVENT: Navigation between tabs ---
+
+  # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
   observeEvent(input$funding_tab, current_view("funding"))
@@ -49,7 +52,7 @@ main_server_logic <- function(input, output, session, values) {
   }) |>
     bindEvent(input$generate_forecast)
 
-  # --- EVENT: Exit Session Popup ---
+  # --- EVENTS: Exit Session Popup ---
   observeEvent(input$exit_session, {
     showModal(
       tagAppendAttributes(
@@ -246,22 +249,32 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # When leaving manual priority view, clear pending order
-  observeEvent(
-    input$select_priority,
-    {
-      if (
-        !is.null(pending_order()) && input$select_priority != "Manual Priority"
-      ) {
-        pending_order(NULL)
-        showNotification(
-          "Unsaved manual order discarded",
-          type = "message",
-          duration = 3
-        )
-      }
-    },
-    ignoreNULL = FALSE
-  )
+  observeEvent(input$select_priority, {
+    if (!is.null(pending_order()) && input$select_priority != "Manual Priority") {
+      pending_order(NULL)
+      showNotification("Unsaved manual order discarded", type = "message", duration = 3)
+    }
+  }, ignoreNULL = FALSE)
+
+  # --- EVENT: Upload Expenses and Funding Data ---
+  observeEvent(input$spreadsheet_upload, {
+    req(input$spreadsheet_upload)
+    path <- input$spreadsheet_upload$datapath
+
+    tryCatch({
+      data_list <- read_excel_data(path)
+      funding_sources_df <- data_list$funding_sources
+      expense_df <- data_list$expense
+
+      values$funding_sources <- funding_sources_df
+      values$expenses <- expense_df
+      showNotification("Data saved successfully", type = "message", duration = 3)
+    }, error = function(e) {
+      showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
+    })
+  })
+
+
 
   # --- EVENT: Logic for column sorting ---
   # 1.Dynamically generate the sorting rules list
@@ -454,26 +467,24 @@ main_server_logic <- function(input, output, session, values) {
                 <'col-sm-5'i>
                 <'col-sm-7'p>
               >",
-          pageLength = 10,
-          scrollX = TRUE
-        ),
-        rownames = FALSE
-      )
-    },
-    server = FALSE
-  )
+        pageLength = 10,
+        scrollX = TRUE
+      ),
+      rownames = FALSE
+    )
+  }, server = FALSE)
+  
 
-  output$sample_expense_table <- renderDT(
-    {
-      req(values$expenses)
-      df <- values$expenses
-      colnames(df) <- display_expense_names[names(df)]
-      datatable(
-        df,
-        options = list(
-          pageLength = 10,
-          scrollX = TRUE,
-          dom = "<'row align-items-center'
+  output$sample_expense_table <- renderDT({
+    req(values$expenses)
+    df <- values$expenses
+    colnames(df) <- display_expense_names[names(df)]
+    datatable(
+      df,
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        dom = "<'row align-items-center'
                 <'col-sm-6'l>
                 <'col-sm-6 text-end'B>
               >
@@ -520,26 +531,18 @@ main_server_logic <- function(input, output, session, values) {
       rownames = FALSE
     )
   })
-
-  output$budget_allocation_table <- renderDT({
-    req(values$allocation_result)
-    df <- values$allocation_result
-    colnames(df) <- display_budget_allocation_names[names(df)]
-
-    datatable(
-      df
-    )
+  
+  # --- EVENT: Activating Forecasting Button ---
+  # NEEDS VALIDATION
+  observeEvent(input$generate_forecast, {
+    req(values$funding_sources)
+    req(values$expenses)
+    allocation_data <- activate_allocation_algorithm(values$funding_sources, values$expenses)
+    values$allocation_result <- allocation_data$allocations
+    values$funding_summary <- allocation_data$funds
+    values$expense_status <- allocation_data$expenses
   })
-
-  output$unallocated_funding_table <- renderDT({
-    req(values$funding_summary)
-    df <- values$funding_summary
-    colnames(df) <- display_funding_summary_names[names(df)]
-
-    datatable(
-      df
-    )
-  })
+  
 
   # --- OUTPUT: Dashboard Graphs ---
   all_shortfall <- reactive(
@@ -555,7 +558,7 @@ main_server_logic <- function(input, output, session, values) {
 
   output$shortfall_plot <- renderUI({
     if (!all_shortfall()) {
-      tags$p("No data available.")
+      tags$p("No data available.", style = "font-size: 16px; text-align: center;")
     } else {
       plotlyOutput("shortfall_bar_plot", height = "100%")
     }
@@ -567,7 +570,7 @@ main_server_logic <- function(input, output, session, values) {
 
   output$shortfall_number <- renderUI({
     if (!all_shortfall()) {
-      tags$p("No data available.")
+      tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_shortfalls
     }
@@ -575,7 +578,7 @@ main_server_logic <- function(input, output, session, values) {
 
   output$total_balance <- renderUI({
     if (!all_shortfall()) {
-      tags$p("No data available.")
+      tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_balance
     }
@@ -602,10 +605,8 @@ main_server_logic <- function(input, output, session, values) {
     cm <- clicked_month()
 
     if (is.null(cm)) {
-      tags$p(
-        "Click on a month to see the allocation plot.",
-        style = "font-size: 16px; text-align: center;"
-      )
+      tags$p("Click on a month to see the allocation plot.",
+             style = "font-size: 16px; text-align: center;")
     } else {
       tagList(
         tags$p(
@@ -616,6 +617,28 @@ main_server_logic <- function(input, output, session, values) {
       )
     }
   })
+  
+  
+  # --- OUTPUT: Dashboard Result Tables ---
+  output$budget_allocation_table <- renderDT({
+    req(values$allocation_result)
+    df <- values$allocation_result
+    
+    datatable(
+      df
+    )
+    
+  })
+  
+  output$unallocated_funding_table <- renderDT({
+    df <- values$funding_summary
+    
+    datatable(
+      df
+    )
+  })
+  
+  
 }
 
 

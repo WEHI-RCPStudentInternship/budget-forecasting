@@ -1,17 +1,13 @@
 # --- Column-based Sorting ---
 col_ordering <- function(expenses_data, ordering_rules) {
-  #' This function sorts the expenses data based on column priorities and dynamic category order.
-  #' 
-  #' @param expenses_data: DataFrame containing expenses information
-  #' @param ordering_rules: List containing sorting preferences:
-  #' - p1_item: 1st priority item ("Categories", "Payment Date", or "None")
-  #' - p1_date_dir: Direction for payment date sorting ("earliest_payment_date", "latest_payment_date", or NULL)
-  #' - p2_item: 2nd priority item ("Categories", "Payment Date", or "None")
-  #' - p2_date_dir: Direction for payment date sorting ("earliest_payment_date", "latest_payment_date", or NULL)
-  #' - category_order: Vector defining the user-specified order of expense categories
-  #' 
-  #' @return: Sorted expenses DataFrame with updated priority indices
-
+  # This function sorts the expenses data based on column priorities and dynamic category order.
+  #
+  # Arguments:
+  # expenses_data: Data frame containing expenses data
+  # ordering_rules: List representing user's sorting rules
+  #
+  # Returns:
+  # expenses_sorted: Sorted expenses data frame
   
   # A. Reflect the order of category blocks dragged by the user on the page
   # Convert `expense_category` to a factor; the order of `levels` represents the user's desired sequence
@@ -27,7 +23,7 @@ col_ordering <- function(expenses_data, ordering_rules) {
     
     if (p_item == "Categories") {
       # Sort directly according to the factor order set by mutate
-      return(expr(expense_category))
+      return(expr(category_rank))
     } 
     
     if (p_item == "Payment Date") {
@@ -60,7 +56,8 @@ col_ordering <- function(expenses_data, ordering_rules) {
   # Use !!! to unquote the expressions in the list for the arrange function
   expenses_sorted <- expenses_data %>%
     arrange(!!!sort_list) %>%
-    mutate(priority = row_number())
+    mutate(priority = row_number()) %>%
+    select(-category_rank)
   return(expenses_sorted)
 }
 

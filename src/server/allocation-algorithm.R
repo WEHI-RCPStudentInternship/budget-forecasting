@@ -324,12 +324,13 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   )
   # Clean up negative zeros
   df_funds_summary$remaining_amount[df_funds_summary$remaining_amount < 0] <- 0
-
+  
   # Return all 3 as a named list
   return(list(
     allocations = df_allocations,
     expenses = df_expenses_status,
-    funds = df_funds_summary
+    funds = df_funds_summary,
+    full_allocation_data = df_full_allocation
   ))
 }
 
@@ -356,6 +357,7 @@ activate_allocation_algorithm <- function(sources, expenses) {
     # Generate DataFrames
     dfs <- create_financial_dfs(final_matrix, sources, expenses)
     
+    
     df_allocations <- dfs$allocations
     df_expenses_status <- dfs$expenses
     df_funds_summary <- dfs$funds
@@ -367,3 +369,29 @@ activate_allocation_algorithm <- function(sources, expenses) {
   
   return (dfs)
 }
+
+
+## ------------------------------------------------
+# SourceID: ID of the funding source (e.g., FS001).
+# ExpenseID: ID of the expense being paid (e.g., E004).
+# ExpenseCategory: The category of the expense (e.g., Salary).
+# AllocatedAmount: The exact dollar amount transferred.
+df_allocations
+
+
+## ------------------------------------------------
+# All original columns (ID, Category, Amount, Date) plus:
+# IsFilled: A Boolean (TRUE/FALSE) indicating if the optimization solver selected this expense.
+df_expenses_status
+
+
+## ------------------------------------------------
+# SourceID: ID of the fund.
+# InitialAmount: The starting budget.
+# UsedAmount: Total allocated in this solution (sum(x_matrix[i, ])).
+# RemainingAmount: What is left over (Initial - Used).
+df_funds_summary
+
+
+## ------------------------------------------------
+# knitr::purl(input = "Complete_Algorithm_Alternative.Rmd", output = "Complete_Algorithm_Alternative.R")
