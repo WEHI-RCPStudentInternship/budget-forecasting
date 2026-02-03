@@ -4,7 +4,6 @@ source("src/server/output.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
 source("src/server/edit-rows.R")
-source("src/server/testing.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page

@@ -20,6 +20,7 @@ process_funding_data <- function(df) {
   #' Read the dataframe, select and rename columns for the funding data
   #' 
   #' @param df: data frame read from the excel sheet
+  #' 
   #' @return: funding_sources_df: processed funding sources data frame
   #' Dataframe structure:
   #' - source_id: Character
@@ -58,6 +59,7 @@ process_expense_data <- function(df) {
   #' Read the dataframe, select and rename columns for the expense data
   #'
   #' @param df: data frame read from the excel sheet
+  #' 
   #' @return: expense_df: processed expense data frame
   #'
   #' Dataframe structure:

@@ -9,6 +9,7 @@ col_ordering <- function(expenses_data, ordering_rules) {
   #' - p2_item: 2nd priority item ("Categories", "Payment Date", or "None")
   #' - p2_date_dir: Direction for payment date sorting ("earliest_payment_date", "latest_payment_date", or NULL)
   #' - category_order: Vector defining the user-specified order of expense categories
+  #' 
   #' @return: Sorted expenses DataFrame with updated priority indices
 
   
@@ -72,6 +73,7 @@ row_reorder <- function(newOrder, expenses, proxy, id_col) {
   #' @param expenses: current expenses dataframe
   #' @param proxy: DT proxy object for updating the DataTable
   #' @param id_col: name of the column containing unique item IDs
+  #' 
   #' @return: updated expenses dataframe with new priority
 
   new_idx <- match(newOrder, expenses[[id_col]])

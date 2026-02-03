@@ -94,8 +94,7 @@ The app accepts a Master Spreadsheet as input, processes the data, and generates
     │   ├── edit-rows.R                   # CRUD helpers for funding & expense rows
     │   ├── sorting.R                     # Sorting and reordering logic
     │   ├── graph.R                       # Plot creation (shortfall, circos/chord)
-    │   ├── output.R                      # Download handlers and Excel builders
-    │   └── testing.R                     # Dev/test helpers and sample data generators
+    │   └── output.R                      # Download handlers and Excel builders
     └── ui/                               # UI component files
         ├── forecast-page.R               # Forecast page UI and components
         ├── funding-page.R                # Funding management UI (forms / tables)
@@ -109,7 +108,7 @@ The diagram below illustrates the structure and interaction of the various modul
 
 ![Module Structure Diagram](www/module-structure-diagram.png)
 
-Diagram is updated as of 31/1/2025
+Diagram is updated as of 31/01/2025
 
 #### 4.2.3 Values Callouts
 
