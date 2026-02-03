@@ -32,7 +32,6 @@ process_funding_data <- function(df) {
   #' - amount: Numeric
   #' - notes: Character
 
-  print(df)
   funding_sources_df <- df %>%
     select(`Source ID`, `Funding Source`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
     setNames(nm = c("source_id", "funding_source", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
@@ -57,22 +56,41 @@ process_funding_data <- function(df) {
 }
 
 process_expense_data <- function(df) {
-  # Read the dataframe, select and rename columns for the expense data
-  #
-  # Arguments:
-  # df: data frame read from the excel sheet
-  # Returns:
-  # expense_df: processed expense data frame
-  # 
-  # Dataframe structure:
-  # - expense_id: Character
-  # - expense_category: Character
-  # - planned_amount: Numeric
-  # - latest_payment_date: Date
-  
+  #' Read the dataframe, select and rename columns for the funding data
+  #'
+  #' @param df: data frame read from the excel sheet
+  #' @return: funding_sources_df: processed funding sources data frame
+  #' Dataframe structure:
+  #' - source_id: Character
+  #' - funding_source: Character
+  #' - allowed_categories: List of Character
+  #'   (this column from values$funding_sources is a character but will be converted to list after this function)
+  #' - valid_from: Date
+  #' - valid_to: Date
+  #' - amount: Numeric
+  #' - notes: Character
+
   expense_df <- df %>%
-    select(`Priority`, `Expense ID`, `Expense Name`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
-    setNames(nm = c("priority", "expense_id", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
+    select(
+      `Priority`,
+      `Expense ID`,
+      `Expense Name`,
+      `Expense Category`,
+      `Planned Amount`,
+      `Latest Payment Date`,
+      `Notes`
+    ) %>%
+    setNames(
+      nm = c(
+        "priority",
+        "expense_id",
+        "expense_name",
+        "expense_category",
+        "planned_amount",
+        "latest_payment_date",
+        "notes"
+      )
+    ) %>%
 
     # Convert data types
     mutate(
@@ -87,55 +105,78 @@ process_expense_data <- function(df) {
 
     # Remove rows with NA in expense_id
     filter(!is.na(expense_id))
-    
+
   return(expense_df)
 }
 
 # Data validation functions
-data_validation <- function(data) {
-  # validate for the values dataframe
-  # this will be called at all time to check at any point the data is invalid
+data_validation <- function(df, type) {
+  #' Validate the funding sources or expenses data frame
+  #' 
+  #' @param df: data frame to validate
+  #' @param type: "funding" or "expense"
+  #' 
+  #' @return: A vector of error messages. Empty if no errors found.
+  
+  errors <- c()
 
-  funding_sources <- data$funding_sources
-  expenses <- data$expenses
+  # Validate funding sources
+  if (type == "funding") {
+    funding_sources <- df
+    invalid_funding_dates <- funding_sources %>%
+      filter(!is.na(valid_from) & !is.na(valid_to) & valid_from > valid_to)
+    if (nrow(invalid_funding_dates) > 0) {
+      errors <- c(errors, "Error: Some funding sources have 'valid_from' date later than 'valid_to' date.")
+    }
 
-  # For funding sources
+    required_funding_columns <- c("source_id", "funding_source", "allowed_categories", "amount", "valid_from", "valid_to")
+    for (column in required_funding_columns) {
+      if (any(is.na(funding_sources[[column]]))) {
+        errors <- c(errors, paste("Error: Funding column", column, "contains missing values."))
+      }
+    }
 
-  # valid from should be before valid to
-  invalid_funding_dates <- funding_sources %>%
-    filter(!is.na(valid_from) & !is.na(valid_to) & valid_from > valid_to)
-  if (nrow(invalid_funding_dates) > 0) {
-    showNotification("Error: Some funding sources have invalid date ranges.", type = "error", duration = NULL)
+    # Check for duplicate funding sources
+    duplicate_funding_ids <- funding_sources %>%
+      group_by(source_id) %>%
+      filter(n() > 1) %>%
+      distinct(source_id)
+
+    if (nrow(duplicate_funding_ids) > 0) {
+      errors <- c(errors, "Error: Duplicate funding source IDs found.")
+    }
+
+    # Check for negative amounts in funding sources
+    if (any(funding_sources$amount < 0, na.rm = TRUE)) {
+      errors <- c(errors, "Error: Negative amounts found in funding sources.")
+    }
+  } 
+
+  # Validate expenses
+  else if (type == "expense") {
+    expenses <- df
+
+    required_expense_columns <- c("expense_id", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "priority")
+    for (column in required_expense_columns) {
+      if (any(is.na(expenses[[column]]))) {
+        errors <- c(errors, paste("Error: Expense column", column, "contains missing values."))
+      }
+    }
+
+    # Check for duplicate expense IDs
+    duplicate_expense_ids <- expenses %>%
+      group_by(expense_id) %>%
+      filter(n() > 1) %>%
+      distinct(expense_id)
+    if (nrow(duplicate_expense_ids) > 0) {
+      errors <- c(errors, "Error: Duplicate expense IDs found.")
+    }
+
+    # Check for negative amounts in expenses
+    if (any(expenses$planned_amount < 0, na.rm = TRUE)) {
+      errors <- c(errors, "Error: Negative planned amounts found in expenses.")
+    }
   }
-
-  # amount should be non-negative
-  invalid_funding_amounts <- funding_sources %>%
-    filter(!is.na(amount) & amount < 0)
-  if (nrow(invalid_funding_amounts) > 0) {
-    showNotification("Error: Some funding sources have negative amounts.", type = "error", duration = NULL)
-  }
-
-  # For expenses
-
-  # valid categories should be non-empty
-  invalid_expense_categories <- expenses %>%
-    filter(is.na(expense_category) | expense_category == "")
-  if (nrow(invalid_expense_categories) > 0) {
-    showNotification("Error: Some expenses have invalid categories.", type = "error", duration = NULL)
-  }
-
-  # planned amount should be non-negative
-  invalid_expense_amounts <- expenses %>%
-    filter(!is.na(planned_amount) & planned_amount < 0)
-  if (nrow(invalid_expense_amounts) > 0) {
-    showNotification("Error: Some expenses have negative planned amounts.", type = "error", duration = NULL)
-  }
-
-  # if no errors, return TRUE
-  if (nrow(invalid_funding_dates) == 0 && nrow(invalid_funding_amounts) == 0 &&
-      nrow(invalid_expense_categories) == 0 && nrow(invalid_expense_amounts) == 0) {
-    return(TRUE)
-  } else {
-    return(FALSE)
-  }
+  
+  return(errors)
 }

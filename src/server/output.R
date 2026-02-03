@@ -185,6 +185,7 @@ create_allocation_report_wb <- function(values) {
   #' Create Excel workbook for allocation report
   #' 
   #' @param values: reactiveValues containing allocation results and funding summary
+  #' 
   #' @return: wb: Excel workbook object with allocation report structure
 
   style_header_title <- createStyle(fontSize = 16, textDecoration = "bold")

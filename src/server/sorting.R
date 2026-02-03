@@ -1,31 +1,32 @@
 # --- Column-based Sorting ---
 col_ordering <- function(expenses_data, ordering_rules) {
-  # This function sorts the expenses data based on column priorities and dynamic category order.
-  #
-  # Arguments:
-  # expenses_data: Data frame containing expenses data
-  # ordering_rules: List representing user's sorting rules
-  #
-  # Returns:
-  # expenses_sorted: Sorted expenses data frame
-  
+  #' This function sorts the expenses data based on column priorities and dynamic category order.
+  #'
+  #' @param expenses_data: DataFrame containing expenses information
+  #' @param ordering_rules: List containing sorting preferences:
+  #' - p1_item: 1st priority item ("Categories", "Payment Date", or "None")
+  #' - p1_date_dir: Direction for payment date sorting ("earliest_payment_date", "latest_payment_date", or NULL)
+  #' - p2_item: 2nd priority item ("Categories", "Payment Date", or "None")
+  #' - p2_date_dir: Direction for payment date sorting ("earliest_payment_date", "latest_payment_date", or NULL)
+  #' - category_order: Vector defining the user-specified order of expense categories
+  #' @return: Sorted expenses DataFrame with updated priority indices
+
   # A. Reflect the order of category blocks dragged by the user on the page
-  # Convert `expense_category` to a factor; the order of `levels` represents the user's desired sequence
   expenses_data <- expenses_data %>%
-    mutate(expense_category = factor(
-      expense_category, 
-      levels = ordering_rules$category_order
-    ))
-  
+    mutate(
+      category_rank = match(expense_category, ordering_rules$category_order)
+    )
   # B. Define a mapping function: determine the sorting expression based on the project type
   get_sort_expression <- function(p_item, p_date_dir) {
-    if (is.null(p_item) || p_item == "None") return(NULL)
-    
+    if (is.null(p_item) || p_item == "None") {
+      return(NULL)
+    }
+
     if (p_item == "Categories") {
       # Sort directly according to the factor order set by mutate
       return(expr(category_rank))
-    } 
-    
+    }
+
     if (p_item == "Payment Date") {
       # Determine ascending or descending order based on the direction parameter
       if (!is.null(p_date_dir) && p_date_dir == "latest_payment_date") {
@@ -36,22 +37,32 @@ col_ordering <- function(expenses_data, ordering_rules) {
     }
     return(NULL)
   }
-  
+
   # C. Construct a multi-level sorting list
   sort_list <- list()
-  
+
   # 1st Priority
-  p1_expr <- get_sort_expression(ordering_rules$p1_item, ordering_rules$p1_date_dir)
-  if (!is.null(p1_expr)) sort_list[[length(sort_list) + 1]] <- p1_expr
-  
+  p1_expr <- get_sort_expression(
+    ordering_rules$p1_item,
+    ordering_rules$p1_date_dir
+  )
+  if (!is.null(p1_expr)) {
+    sort_list[[length(sort_list) + 1]] <- p1_expr
+  }
+
   # 2nd Priority
-  p2_expr <- get_sort_expression(ordering_rules$p2_item, ordering_rules$p2_date_dir)
-  if (!is.null(p2_expr)) sort_list[[length(sort_list) + 1]] <- p2_expr
-  
+  p2_expr <- get_sort_expression(
+    ordering_rules$p2_item,
+    ordering_rules$p2_date_dir
+  )
+  if (!is.null(p2_expr)) {
+    sort_list[[length(sort_list) + 1]] <- p2_expr
+  }
+
   # D. Tie-breaker
   # When payment date and categories are the same, this preserves the current relative order when rules are equal
   sort_list[[length(sort_list) + 1]] <- expr(priority)
-  
+
   # E. Perform the sorting and rewrite the indices
   # Use !!! to unquote the expressions in the list for the arrange function
   expenses_sorted <- expenses_data %>%

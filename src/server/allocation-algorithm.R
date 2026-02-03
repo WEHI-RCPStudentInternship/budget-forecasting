@@ -256,7 +256,7 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   #' @param sources DataFrame of funding sources
   #' @param expenses DataFrame of expenses
   #'
-  #' @return A list containing three DataFrames: allocations, expenses status, and funds summary
+  #' @return A list containing three DataFrames: allocations, expenses status, funds summary, and full allocation data
   #' @details
   #' df_allocations:
   #' SourceID: ID of the funding source (e.g., FS001).
@@ -273,15 +273,18 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   #' InitialAmount: The starting budget.
   #' UsedAmount: Total allocated in this solution (sum(x_matrix[i, ])).
   #' RemainingAmount: What is left over (Initial - Used).
+  #' 
+  #' df_full_allocation:
+  #' A combined DataFrame showing detailed allocation per expense including status.
 
   n_sources <- nrow(sources)
   n_expenses <- nrow(expenses)
-
+  
   # --- 1. Allocations DataFrame ---
   # Find all non-zero entries in the matrix
   # which(..., arr.ind=TRUE) returns a matrix of [row_index, col_index]
   alloc_idx <- which(mat_x > 1e-6, arr.ind = TRUE)
-
+  
   # Construct the dataframe directly from indices
   df_allocations <- data.frame(
     source_id = sources$source_id[alloc_idx[, 1]],
@@ -290,32 +293,28 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
     allocated_amount = mat_x[alloc_idx]
   )
   # Optional: Sort by Source then Expense
-  df_allocations <- df_allocations[
-    order(df_allocations$source_id, df_allocations$expense_id),
-  ]
-
+  df_allocations <- df_allocations[order(df_allocations$source_id, df_allocations$expense_id), ]
+  
+  
   # --- 2. Expense Status DataFrame ---
   # Calculate how much was allocated to each expense (Column Sums)
   expense_filled_amounts <- colSums(mat_x)
-
+  
   df_expenses_status <- expenses
   df_expenses_status$filled_amount <- expense_filled_amounts
-
+  
   # Determine status: Fully Filled if allocated >= requested (minus tiny error)
-  df_expenses_status$is_filled <- expense_filled_amounts >=
-    (expenses$planned_amount - 1e-5)
-
+  df_expenses_status$is_filled <- expense_filled_amounts >= (expenses$planned_amount - 1e-5)
+  
   # Add a readable Status column
-  df_expenses_status$status <- ifelse(
-    df_expenses_status$is_filled,
-    "Full",
-    ifelse(df_expenses_status$filled_amount > 1e-6, "Partial", "Unfunded")
-  )
-
+  df_expenses_status$status <- ifelse(df_expenses_status$is_filled, "Full",
+                                      ifelse(df_expenses_status$filled_amount > 1e-6, "Partial", "Unfunded"))
+  
+  
   # --- 3. Funds Summary DataFrame ---
   # Calculate how much each source used (Row Sums)
   source_used_amounts <- rowSums(mat_x)
-
+  
   df_funds_summary <- data.frame(
     source_id = sources$source_id,
     initial_amount = sources$amount,
@@ -324,6 +323,17 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   )
   # Clean up negative zeros
   df_funds_summary$remaining_amount[df_funds_summary$remaining_amount < 0] <- 0
+  
+  df_full_allocation <- df_allocations %>%
+    left_join(
+      df_expenses_status %>%
+        select(
+          expense_id,
+          expense_category,
+          planned_amount,
+          latest_payment_date,
+          status
+        ), by = c("expense_id", "expense_category"))
   
   # Return all 3 as a named list
   return(list(
@@ -369,29 +379,3 @@ activate_allocation_algorithm <- function(sources, expenses) {
   
   return (dfs)
 }
-
-
-## ------------------------------------------------
-# SourceID: ID of the funding source (e.g., FS001).
-# ExpenseID: ID of the expense being paid (e.g., E004).
-# ExpenseCategory: The category of the expense (e.g., Salary).
-# AllocatedAmount: The exact dollar amount transferred.
-df_allocations
-
-
-## ------------------------------------------------
-# All original columns (ID, Category, Amount, Date) plus:
-# IsFilled: A Boolean (TRUE/FALSE) indicating if the optimization solver selected this expense.
-df_expenses_status
-
-
-## ------------------------------------------------
-# SourceID: ID of the fund.
-# InitialAmount: The starting budget.
-# UsedAmount: Total allocated in this solution (sum(x_matrix[i, ])).
-# RemainingAmount: What is left over (Initial - Used).
-df_funds_summary
-
-
-## ------------------------------------------------
-# knitr::purl(input = "Complete_Algorithm_Alternative.Rmd", output = "Complete_Algorithm_Alternative.R")
