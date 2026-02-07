@@ -10,7 +10,7 @@ main_server_logic <- function(input, output, session, values) {
   # 1. GENERAL LOGIC ----
   
   ## Current page ----
-  current_view <- reactiveVal("dashboard")
+  current_view <- reactiveVal("funding")
 
   clicked_month <- reactiveVal(NULL)
 

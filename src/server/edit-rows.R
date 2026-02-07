@@ -7,22 +7,23 @@ add_funding_button <- function(input, values) {
   new_row <- data.frame(
     source_id = sprintf("FS%03d", nrow(values$funding_sources) + 1),
     funding_source = if (is.null(input$source_name_input)) NA else input$source_name_input,
-    allowed_categories = if (is.null(input$add_allowed_categories)) NA else tolower(paste(as.character(input$add_allowed_categories), collapse = ",")),
+    allowed_categories = if (is.null(input$add_allowed_categories)) NA else I(list(tolower(as.character(input$add_allowed_categories)))),
     valid_from = if (is.null(input$valid_from_date)) NA else as.Date(input$valid_from_date),
     valid_to = if (is.null(input$valid_to_date)) NA else as.Date(input$valid_to_date),
     amount = if (is.null(input$funding_amount)) NA else as.numeric(input$funding_amount),
     notes = if (is.null(input$funding_note)) NA else input$funding_note,
     stringsAsFactors = FALSE
   )
-
-  must_have <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
-  for (col in must_have) {
-    val <- new_row[[col]]
-    if (any(is.na(val))) {
-      showNotification("Missing required field", type = "error", duration = 5)
-      return(NULL)
-    }
-  }
+  
+  print(new_row)
+  # must_have <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
+  # for (col in must_have) {
+  #   val <- new_row[[col]]
+  #   if (any(is.na(val))) {
+  #     showNotification("Missing required field", type = "error", duration = 5)
+  #     return(NULL)
+  #   }
+  # }
 
   values$funding_sources <- rbind(values$funding_sources, new_row)
 }
