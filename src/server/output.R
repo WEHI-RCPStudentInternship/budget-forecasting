@@ -1,7 +1,8 @@
+# Main output ----
 main_output <- function(input, output, session, values) {
   #' Function for downloading excel files
   
-  # --- HANDLER: Download Excel Template ---
+  # HANDLER: Download Excel Template ----
   output$download_template <- downloadHandler(
     filename = function() "budget_template.xlsx",
     content = function(file) {
@@ -9,7 +10,7 @@ main_output <- function(input, output, session, values) {
     }
   )
 
-  # --- HANDLER: Download the Excel file with current data ---
+  # HANDLER: Download the Excel file with current data ----
   output$initial_download <- downloadHandler(
     filename = function() "budget_data.xlsx",
     content = function(file) {
@@ -24,7 +25,7 @@ main_output <- function(input, output, session, values) {
     }
   )
 
-  # --- HANDLER: Download Allocation Report ---
+  # HANDLER: Download Allocation Report ----
   output$budget_download <- downloadHandler(
     filename = function() "allocation_report.xlsx",
     content = function(file) {
@@ -41,7 +42,7 @@ main_output <- function(input, output, session, values) {
 }
 
 
-# Helper functions:
+# Helper functions: ----
 
 input_excel_download <- function(values) {
   #' Download current data as Excel file
