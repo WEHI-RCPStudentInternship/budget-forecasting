@@ -65,9 +65,11 @@ delete_row <- function(df, selected_rows) {
 
   if (length(selected_rows) > 0 && all(selected_rows %in% seq_len(nrow(df)))) {
     df <- df[-selected_rows, ]
-
-    df$priority <- seq_len(nrow(df))
     
+    if ("priority" %in% colnames(df)) {
+      # Reassign priority values after deletion
+      df$priority <- seq_len(nrow(df))
+    }
 
     showNotification(paste("Deleted", length(selected_rows), "row(s)."), type = "message")
   } else {
