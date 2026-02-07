@@ -1,5 +1,7 @@
-# UI for Funding Page
+
+
 funding_ui <- function() {
+  # ---- Layout of the Funding Page ----
   
   div(
     class = "result-container",
@@ -10,16 +12,17 @@ funding_ui <- function() {
       div(
         class = "input-title-container",
         
+        ## ---- 1. Funding Title Section ----
         div(
           "Funding",
           class = "content-title"
         ),
-        
         div(
           actionButton("add_funding", "+ Add Funding", class = "add_data_btn")
         )
       ),
       
+      ## ---- 2. Funding Data Table ----
       card(
         div(
           div(
@@ -38,6 +41,10 @@ funding_ui <- function() {
 
 
 upload_funding_modal <- function(categories) {
+  # ---- Layout of the Add Funding Modal Popup ----
+  #'
+  #' @param categories: avaialble input funding categories from previous inputs
+  
   
   tagAppendAttributes(
     modalDialog(
@@ -51,7 +58,7 @@ upload_funding_modal <- function(categories) {
       div(
         id = "funding-form",
         
-        # Funding Source Name
+        ## ---- 1. Funding Source Name ----
         div(
           id = "funding-source",
           class = "elongated-input",
@@ -65,8 +72,7 @@ upload_funding_modal <- function(categories) {
           )
         ),
         
-        
-        # Funding Allowed Categories
+        ## ---- 2. Funding Allowed Categories ----
         div(
           id = "funding-allowed-categories",
           
@@ -87,7 +93,7 @@ upload_funding_modal <- function(categories) {
           )
         ),
         
-        # Validity Date
+        ## ---- 3. Validity Date ----
         div(
           id = "date-container",
           
@@ -116,7 +122,7 @@ upload_funding_modal <- function(categories) {
           )
         ),
         
-        # Amount
+        ## ---- 4. Funding Amount ----
         div(
           id = "funding-amount",
           class = "elongated-input",
@@ -130,7 +136,7 @@ upload_funding_modal <- function(categories) {
           )
         ),
         
-        # Note
+        ## ---- 5. Funding Note ----
         div(
           id = "funding-note",
           class = "elongated-input",

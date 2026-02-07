@@ -8,9 +8,9 @@ source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
 source("src/server/edit-rows.R")
-source("src/server/testing.R")
 
 library(htmlwidgets)
+library(lubridate)
 library(chorddiag)
 
 main_server_logic <- function(input, output, session, values) {
@@ -465,6 +465,7 @@ main_server_logic <- function(input, output, session, values) {
       values$funding_summary <- allocation_data$funds
       values$expense_status <- allocation_data$expenses
       values$full_budget_allocation_df <- allocation_data$full_allocation_data
+      current_view("dashboard")
 
       showNotification(
         "Allocation Finished. Go to Dashboard for result.",
@@ -533,49 +534,59 @@ main_server_logic <- function(input, output, session, values) {
     clicked_month(clicked_bar$x)
   })
   
-  circos_month <- reactive({
-    cm <- clicked_month()
-    req(cm)
-    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-    c <- create_circos_plot(values, month = cutoff)
-    c 
-  })
-  
-  
-  output$circos_plot <- renderChorddiag({
-    c <- circos_month()
-    
-    # Activating zooming on the circos plot using d3.js 
-    onRender(c, "
-      function(el, x) {
-        var svg = d3.select(el).select('svg');
-        var g = svg.select('g');
-        var zoom = d3.zoom()
-          .on('zoom', function() {
-            g.attr('transform', d3.event.transform);
-          })
-          
-        svg.call(zoom);
-        
-      }
-    ")
-  })
   
   output$circos_container <- renderUI({
     cm <- clicked_month()
 
     if (is.null(cm) && all_shortfall()) {
-      tags$p("Click on a month to see the allocation plot.",
-             style = "font-size: 16px; text-align: center;")
-    } else if (!all_shortfall()) {
-      tags$p("No data available.", style = "font-size: 16px; text-align: center;")
-    } else {
-      tagList(
-        tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
-               style = "font-size: 16px; font-weight: 600;"),
-        chorddiagOutput("circos_plot", height = "800px", width = "100%") 
-      )
+      
+      # Default circos plot using the last month of the allocation period
+      expense_df <- values$expenses
+      funding_df <- values$funding_sources
+      default_month <- max(floor_date(c(expense_df$latest_payment_date, funding_df$valid_to), "month"))
+      cm <- default_month
+      
+    } 
+    
+    if (!all_shortfall()) {
+      
+      return (tags$p("No data available.", style = "font-size: 16px; text-align: center;"))
+    
     }
+    
+    circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
+    
+    # Re-rendering new circos plot every time user clicks on a month
+    output[[circos_plot_id]] <- renderChorddiag({
+      
+      cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+      c <- create_circos_plot(values, month = cutoff)
+      
+      # Activating zooming feature for circos plot
+      onRender(c, "
+          function(el, x) {
+            var svg = d3.select(el).select('svg');
+            var g = svg.select('g');
+    
+            var zoom = d3.zoom()
+              .on('zoom', function() {
+                g.attr('transform', d3.event.transform);
+              })
+    
+            svg.call(zoom);
+          }
+      ")
+      
+    })
+
+      
+    tagList(
+      tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
+             style = "font-size: 16px; font-weight: 600;"),
+      chorddiagOutput(circos_plot_id, height = "800px", width = "100%")
+    )
+        
+    
   })
   
   

@@ -1,5 +1,7 @@
-# UI for Forecast Page
+
+
 forecast_ui <- function() {
+  # ---- Layout of the Forecast Page ----
   
   div(
     class = "result-container",
@@ -9,6 +11,8 @@ forecast_ui <- function() {
       
       div(
         class = "info-containers",
+        
+        ## ---- 1. Upload Excel File Section ----
         card(
           id = "upload-card",
           
@@ -39,7 +43,7 @@ forecast_ui <- function() {
           )
         ),
         
-        # Priority Card
+        ## ---- 2. Setting Expense Priority Section ----
         card(
           id = "set-priority-card",
           full_screen = TRUE,
@@ -65,8 +69,10 @@ forecast_ui <- function() {
   )
 }
 
-# Manual Priority View
+
 manual_priority_ui <- function() {
+  # ---- Manual Expense Priority Section ----
+  
   div(
     DTOutput("sample_manual_table"),        
     actionButton("save_manual_order", "Save order", class = "btn-primary"),
@@ -78,12 +84,14 @@ manual_priority_ui <- function() {
 
 # Column Priority View
 column_priority_ui <- function() {
+  # ---- Column Expense Priority Section ----
   
   div(
     
     div(
       id = "priority-container",
       
+      ## ---- 1. First Priority Card ----
       div(
         class = "priority-cards",
         card(
@@ -109,6 +117,7 @@ column_priority_ui <- function() {
         )
       ),
       
+      ## ---- 2. Second Priority Card ----
       div(
         class = "priority-cards",
         card(
@@ -139,7 +148,7 @@ column_priority_ui <- function() {
     
     hr(),
     
-    # Resulting Table from arranging priority
+    ## ---- 3. Resulting Expense Data Table From Setting Priority ----
     div(
       p("Result Table", class = "card-title"),
       
@@ -159,9 +168,9 @@ column_priority_ui <- function() {
   
 }
 
-# Column Priority: Latest Payment Date View
+
 payment_date_view <- function() {
-  #DTOutput("sample_table")
+  # ---- Column Priority: Payment Date View ----
 
   div(
     id = "payment-date-option",
@@ -196,12 +205,11 @@ payment_date_view <- function() {
 }
 
 
-
-
-
-# Column Priority: Allowed Categories View
-
 categories_view <- function(categories) {  
+  # ---- Column Priority: Categories View ----
+  #'
+  #' @param categories: all unique funding categories
+  
   div(
     class = "categories-container",
     tagList(

@@ -1,19 +1,19 @@
 
-# Contains all ui components from ui folder
-# Divided into four sections (pages)
-# 1. Dashboard (default)
-# 2. Forecast
-# 3. Funding 
-# 4. Expense
-
 source("src/ui/dashboard.R")
 source("src/ui/forecast-page.R")
 source("src/ui/funding-page.R")
 source("src/ui/expense-page.R")
 
 main_ui_layout <- function() {
+  #' Contains all UI components from ui folder
+  #' 
+  #' Divides the app into four main pages
+  #' 1. Funding (Default)
+  #' 2. Expense
+  #' 3. Forecast
+  #' 4. Dashboard
   
-  # Custom theme Bootstrap
+  # App Custom Bootstrap Theme
   custom_theme <- bs_theme(
     version = 5,
     base_font = font_google(
@@ -22,6 +22,7 @@ main_ui_layout <- function() {
       )
   )
   
+  # Sidebar Layout
   main_platform <- page_sidebar(
     title = div(
       img(src = "wehi_logo.png",
@@ -32,25 +33,22 @@ main_ui_layout <- function() {
       style = "font-size: 25px; font-weight: 600; color: #575756;"
     ),
     theme = custom_theme,
-    #useShinyjs(),
     
+    # Sidebar Tab Contents
     sidebar = sidebar(
       width = 270,
       
-      actionButton("dashboard_tab", "Dashboard", class = "dashboard_tab_btn", class = "tab-buttons"),
-      actionButton("forecast_tab", "Forecast", class = "forecast_tab_btn", class = "tab-buttons"),
       actionButton("funding_tab", "Funding", class = "funding_tab_btn", class = "tab-buttons"),
-      actionButton("expense_tab", "Expense", class = "expense_tab_btn", class = "tab-buttons")
+      actionButton("expense_tab", "Expense", class = "expense_tab_btn", class = "tab-buttons"),
+      actionButton("forecast_tab", "Forecast", class = "forecast_tab_btn", class = "tab-buttons"),
+      actionButton("dashboard_tab", "Dashboard", class = "dashboard_tab_btn", class = "tab-buttons")
     ),
     
     uiOutput("tab_content"),
-    
-
     tags$body(tags$link(rel = "stylesheet", href = "style.css"))
     
     
   )
-    
     
   
   return (main_platform)

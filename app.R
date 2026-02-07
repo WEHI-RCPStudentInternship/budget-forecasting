@@ -71,6 +71,7 @@ server <- function(input, output, session) {
       source_id = character(),
       initial_amount = numeric(),
       used_amount = numeric(),
+      
       remaining_amount = numeric()
     ),
     expense_status = data.frame(
