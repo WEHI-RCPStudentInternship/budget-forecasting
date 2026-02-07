@@ -1,16 +1,12 @@
 
-source("src/main_ui.R")
-source("src/main_server.R")
+
+# ---- 1. Installing packages from requirements/packages.R ----
+
+
 source("requirements/packages.R")
-
-
-# 1. Installing packages from requirements/packages.R
-
 run_setup()
 
-
-# 2. Load packages
-    
+# ---- 2. Load packages ----
 library(shiny)              # Main framework for the web app            
 library(bslib)              # For modern UI components (cards, value boxes...)
 library(DT)                 # For displaying data tables
@@ -21,23 +17,27 @@ library(tidyr)              # For tidying up data
 library(rmarkdown)          # For creating reports or documents (used for modelling output for allocation algorithm)
 library(shinyWidgets)       # For input controls (pickerInput)
 library(sortable)           # For sorting feature (dragging categories)
+library(lubridate)          # For manipulating dates and times
 library(plotly)             # For plotting interactive graphs (shortfall graph)
+library(chorddiag)          # For constructing interactive chord diagrams (allocation plot)
 library(htmlwidgets)        # For activating JS in graphical visualizations 
-library(ompr)
-library(ompr.roi)
-library(ROI)
-library(ROI.plugin.highs)
-library(magrittr)
+library(ompr)               # For modelling and solving mized integer linear programs
+library(ompr.roi)           # A solver for ompr that uses R Optimisation Infrastructure (ROI)
+library(ROI)                # R Optimization Infrastructure (solver interface)
+library(ROI.plugin.highs)   # High performance software (highs) for linear optimisation
+library(magrittr)           # Forward-pipe operator (%>%) to construct functions
+
+source("src/main_ui.R")
+source("src/main_server.R")
 
 
 
-# 3. Load UI
+# ---- 3. Load UI ----
 
 ui <- main_ui_layout()
 
 
-
-# 4. Load Server
+# ---- 4. Load Server ----
 
 server <- function(input, output, session) {
   
@@ -71,7 +71,6 @@ server <- function(input, output, session) {
       source_id = character(),
       initial_amount = numeric(),
       used_amount = numeric(),
-      
       remaining_amount = numeric()
     ),
     expense_status = data.frame(
@@ -94,14 +93,13 @@ server <- function(input, output, session) {
     )
   )
   
+  
   main_server_logic(input, output, session, values)
   main_output(input, output, session, values)
   
 }
 
-
-
-# 5. Run Shiny App
+# ---- 5. Run Shiny App ----
 shinyApp(ui, server)
 
 

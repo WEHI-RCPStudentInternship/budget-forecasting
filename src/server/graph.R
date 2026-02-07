@@ -2,12 +2,12 @@
 
 # ---- SECTION 1: SHORTFALL BAR GRAPH ----
 create_shortfall_bar <- function(values) {
-  #' Process shortfall data and create the shortfall graphs
-  #' 
-  #' @param values: all funding, expense and allocation data from reactive values
-  #' 
-  #' @return: A list containing total funding balance, total number of shortfalls
-  #'          and shortfall bar graph
+  #' Create shortfall bar plot
+  #'
+  #' @param values: reactiveValues containing funding_sources, and expenses
+  #'
+  #' @return list of total_balance, shortfall plots, and total shortfall
+  
 
   
   # Extracting allocation result from the reactive values
@@ -224,12 +224,12 @@ create_shortfall_bar <- function(values) {
 
 # ---- SECTION 2: ALLOCATION PLOT (CHORD DIAGRAM) ---- 
 create_circos_plot <- function(values, month) {
-  #' Process allocation data and create a chord diagram for the budget allocation
-  #' 
-  #' @param values: allocation data from reactive values
-  #' @param month: month of expense allocation
-  #' 
-  #' @return 
+  #' Create a circos plot showing allocations up to a specified month
+  #'
+  #' @param values: reactiveValues containing funding_sources, expenses
+  #' @param month: Date object specifying the month up to which allocations are considered
+  #'
+  #' @return: chorddiag object representing the circos plot
   
   print(month)
   

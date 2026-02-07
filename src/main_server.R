@@ -135,7 +135,7 @@ main_server_logic <- function(input, output, session, values) {
     # 3. Identify the item to disable (the one already selected in P1)
     disabled_choices <- p2_choices[p2_choices == p1_val]
     
-    # 4. Update the 2nd Priority pickerInput state态
+    # 4. Update the 2nd Priority pickerInput state
     updatePickerInput(
       session = session,
       inputId = "select_second_priority_item",
@@ -460,7 +460,6 @@ main_server_logic <- function(input, output, session, values) {
       req(values$funding_sources)
       req(values$expenses)
       allocation_data <- activate_allocation_algorithm(values$funding_sources, values$expenses)
-      print(allocation_data$full_allocation_data)
       values$allocation_result <- allocation_data$allocations
       values$funding_summary <- allocation_data$funds
       values$expense_status <- allocation_data$expenses
@@ -612,7 +611,6 @@ main_server_logic <- function(input, output, session, values) {
   output$budget_allocation_table <- renderDT({
     req(values$full_budget_allocation_df)
     df <- values$full_budget_allocation_df
-    print(df)
     
     colnames(df) <- display_budget_allocation_names[names(df)]
     
