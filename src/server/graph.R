@@ -287,8 +287,8 @@ create_circos_plot <- function(values, month) {
   rownames(mat) <- sectors
   colnames(mat) <- sectors
   
-  
-  ### ---- Step 2: Direct Expense And Funding Allocations ----
+
+  ## ---- Step 2: Direct Expense And Funding Allocations ----
   for (i in 1:nrow(rows_until_month)) {
     mat[rows_until_month$source_id[i], rows_until_month$expense_id[i]] <- rows_until_month$allocated_amount[i]
     mat[rows_until_month$expense_id[i], rows_until_month$source_id[i]] <- rows_until_month$allocated_amount[i]
@@ -296,7 +296,7 @@ create_circos_plot <- function(values, month) {
   
   ## ---- Step 3: Allocation Cases For Chord Diagram ----
 
-  ### ---- Case 1: Leftover expenses self-links at the current time ----
+  ### ---- Case 1: Partial leftover expenses at the current time ----
   leftover_expenses <- rows_until_month %>%
     group_by(expense_id) %>%
     summarise(
@@ -319,7 +319,7 @@ create_circos_plot <- function(values, month) {
   
   all_expenses_allocations <- bind_rows(leftover_expenses, fully_unallocated_expense)
   
-  ### ---- Indirect Expense Allocations (Case 2 & 3) ----
+  ### ---- Remaining Expense Allocations (Case 1 & 2) ----
   for (i in 1:nrow(all_expenses_allocations)) {
     mat[all_expenses_allocations$expense_id[i], all_expenses_allocations$expense_id[i]] <- all_expenses_allocations$leftover_expense[i]
   }
@@ -329,18 +329,16 @@ create_circos_plot <- function(values, month) {
   
   # can be improved by only showing the funding when it becomes available
   
-  # Funding that hasn't been allocated or isn't available yet
+  ### ---- Case 1: Funding not fully allocated ----
   unallocated_funding <- funding %>%
     anti_join(rows_until_month, by = "source_id") %>%
     summarise(
       source_id,
       remaining_amount = amount
     )
-  # print("unallocated_funding")
-  # print(unallocated_funding)
+
   
-  # need to look at the case of leftover funding (similar to leftover expenses)
-  # need source id, intial amount, cumulative allocation, leftover funding (these are up until the clicked month)
+  ### ---- Case 2: Partial leftover funding at the current time ----
   leftover_funding <- rows_until_month %>%
     group_by(source_id) %>%
     summarise(
@@ -349,19 +347,15 @@ create_circos_plot <- function(values, month) {
       remaining_amount = amount - cumulative_allocation,
       .groups = "drop"
     )
-  # print("leftover funding")
-  # print(leftover_funding)
-  
+
   all_funding_allocations <- bind_rows(unallocated_funding, leftover_funding)
   all_funding_allocations <- all_funding_allocations %>%
     summarise(
       source_id,
       remaining_amount
     )
-  print("all funding allocations")
-  print(all_funding_allocations)
   
-  # Leftover funding self-links
+  ### ---- Remaining Funding Allocations (Case 1 & 2) ----
   if (nrow(all_funding_allocations) > 0) {
     for (i in 1:nrow(all_funding_allocations)) {
       mat[all_funding_allocations$source_id[i], all_funding_allocations$source_id[i]] <- all_funding_allocations$remaining_amount[i]
@@ -378,6 +372,7 @@ create_circos_plot <- function(values, month) {
   expense_colors <- heat.colors(expense_length)
   sector_colors <- c(funding_colors, expense_colors)
   
+  ## ---- Step 4: Allocation Chord Diagram ----
   c <- chorddiag(mat,
             groupColors = sector_colors,
             groupNames = sectors,

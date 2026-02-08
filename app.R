@@ -1,10 +1,12 @@
 
+source("requirements/packages.R")
+source("src/main_ui.R")
+source("src/main_server.R")
 
 # ---- 1. Installing packages from requirements/packages.R ----
 
-
-source("requirements/packages.R")
 run_setup()
+
 
 # ---- 2. Load packages ----
 library(shiny)              # Main framework for the web app            
@@ -26,9 +28,6 @@ library(ompr.roi)           # A solver for ompr that uses R Optimisation Infrast
 library(ROI)                # R Optimization Infrastructure (solver interface)
 library(ROI.plugin.highs)   # High performance software (highs) for linear optimisation
 library(magrittr)           # Forward-pipe operator (%>%) to construct functions
-
-source("src/main_ui.R")
-source("src/main_server.R")
 
 
 
