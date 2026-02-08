@@ -6,15 +6,14 @@ source("src/server/graph.R")
 source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
-  
-  # 1. GENERAL LOGIC ----
-  
-  ## Current page ----
+  # ---- 1. GENERAL LOGIC ----
+
+  ## ---- Current page ----
   current_view <- reactiveVal("funding")
 
   clicked_month <- reactiveVal(NULL)
 
-  ## Data Validation ----
+  ## ---- Data Validation ----
   errors <- reactiveVal(NULL)
   observe({
     req(values$funding_sources)
@@ -37,26 +36,28 @@ main_server_logic <- function(input, output, session, values) {
   }) %>%
     bindEvent(errors(), ignoreInit = TRUE)
 
-  ## EVENT: Navigation between tabs ----
+  ## ---- EVENT: Navigation between tabs ----
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
   observeEvent(input$funding_tab, current_view("funding"))
   observeEvent(input$expense_tab, current_view("expense"))
 
-  ## OUTPUT: Switching between tabs ----
+  ## ---- OUTPUT: Switching between tabs ----
   output$tab_content <- renderUI({
     switch(
       current_view(),
-      "dashboard" = dashboard_ui(total_balance = sum(values$funding_sources$amount)),
+      "dashboard" = dashboard_ui(
+        total_balance = sum(values$funding_sources$amount)
+      ),
       "forecast" = forecast_ui(),
       "funding" = funding_ui(),
       "expense" = expense_ui()
     )
   })
 
-  # 2. DASHBOARD PAGE SERVER LOGIC ----
+  # ---- 2. DASHBOARD PAGE SERVER LOGIC ----
 
-  ## OUTPUT: Dashboard Graphs ----
+  ## ---- OUTPUT: Dashboard Graphs ----
   all_shortfall <- reactive(
     nrow(values$allocation_result) > 0 &&
       nrow(values$funding_summary) > 0 &&
@@ -140,7 +141,7 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
 
-  ## OUTPUT: Dashboard Result Tables ----
+  ## ---- OUTPUT: Dashboard Result Tables ----
   display_budget_allocation_names <- c(
     source_id = "Source ID",
     expense_id = "Expense ID",
@@ -188,7 +189,7 @@ main_server_logic <- function(input, output, session, values) {
     datatable(df)
   })
 
-  ## EVENT: Exit Session Popup ----
+  ## ---- EVENT: Exit Session Popup ----
   observeEvent(input$exit_session, {
     showModal(
       tagAppendAttributes(
@@ -206,34 +207,43 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
-  ## EVENT: End Session ----
+  ## ---- EVENT: End Session ----
   observeEvent(input$end_session, {
-    showNotification("Session Ended. All data cleared.", type = "message", duration = 3)
+    showNotification(
+      "Session Ended. All data cleared.",
+      type = "message",
+      duration = 3
+    )
     removeModal()
     session$reload()
   })
 
-  ## EVENT: Return to session ----
+  ## ---- EVENT: Return to session ----
   observeEvent(input$return_to_session, {
     removeModal()
     current_view("dashboard")
   })
 
+  # ---- 3. FORECAST PAGE SERVER LOGIC ----
 
-  # 3. FORECAST PAGE SERVER LOGIC ----
-  
-  ## OUTPUT: Render priority mode ----
+  ## ---- OUTPUT: Render priority mode ----
   output$priority_card <- renderUI({
-    if (isTruthy(input$select_priority) && input$select_priority == "Manual Priority") {
+    if (
+      isTruthy(input$select_priority) &&
+        input$select_priority == "Manual Priority"
+    ) {
       manual_priority_ui()
-    } else if (isTruthy(input$select_priority) && input$select_priority == "Column Priority") {
+    } else if (
+      isTruthy(input$select_priority) &&
+        input$select_priority == "Column Priority"
+    ) {
       column_priority_ui()
     } else {
       none_priority_ui()
     }
   })
 
-  ## OUTPUT: Render first priority ----
+  ## ---- OUTPUT: Render first priority ----
   output$first_priority <- renderUI({
     if (input$select_first_priority_item == "Payment Date") {
       payment_date_view()
@@ -242,7 +252,7 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
 
-  ## OUTPUT: Render second priority ----
+  ## ---- OUTPUT: Render second priority ----
   output$second_priority <- renderUI({
     if (input$select_second_priority_item == "Payment Date") {
       payment_date_view()
@@ -253,18 +263,18 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
 
-  ## EVENT: Mutual Exclusion for Priority Dropdowns ----
+  ## ---- EVENT: Mutual Exclusion for Priority Dropdowns ----
   observeEvent(input$select_first_priority_item, {
-    ### 1. Get the current value of the 1st Priority ----
+    ### ---- 1. Get the current value of the 1st Priority ----
     p1_val <- input$select_first_priority_item
 
-    ### 2. Define all available choices for the 2nd Priority ----
+    ### ---- 2. Define all available choices for the 2nd Priority ----
     p2_choices <- c("Payment Date", "Categories", "None")
 
-    ### 3. Identify the item to disable (the one already selected in P1) ----
+    ### ---- 3. Identify the item to disable (the one already selected in P1) ----
     disabled_choices <- p2_choices[p2_choices == p1_val]
 
-    ### 4. Update the 2nd Priority pickerInput state ----
+    ### ---- 4. Update the 2nd Priority pickerInput state ----
     updatePickerInput(
       session = session,
       inputId = "select_second_priority_item",
@@ -281,7 +291,7 @@ main_server_logic <- function(input, output, session, values) {
       )
     )
 
-    ### 5. Safety Check: If P2 was already set to the newly disabled item, reset it to "None" ----
+    ### ---- 5. Safety Check: If P2 was already set to the newly disabled item, reset it to "None" ----
     if (input$select_second_priority_item == p1_val) {
       updatePickerInput(
         session,
@@ -291,17 +301,16 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
 
-  ## EVENT: Dragging feature for categories priority ----
-  ### Store the order of categories after dragging ----
+  ## ---- EVENT: Dragging feature for categories priority ----
+  ### ---- Store the order of categories after dragging ----
   drag_order <- reactiveVal(NULL)
   observeEvent(input$drag_categories, {
     drag_order(input$drag_categories)
   })
-  
-  ### Get available categories for dragging ----
+
+  ### ---- Get available categories for dragging ----
   available_categories <- reactive({
-    
-    #### From expenses categories ----
+    #### ---- From expenses categories ----
     exp_cats <- character(0)
     if (
       !is.null(values$expenses) &&
@@ -317,7 +326,7 @@ main_server_logic <- function(input, output, session, values) {
       exp_cats <- exp_cats[!is.na(exp_cats) & nzchar(exp_cats)]
     }
 
-    #### From funding allowed categories (list-column or comma-separated) ----
+    #### ---- From funding allowed categories (list-column or comma-separated) ----
     fund_cats <- character(0)
     if (
       !is.null(values$funding_sources) &&
@@ -341,7 +350,7 @@ main_server_logic <- function(input, output, session, values) {
       fund_cats <- fund_cats[!is.na(fund_cats) & nzchar(fund_cats)]
     }
 
-    ### combine, dedupe, sort ----
+    ### ---- combine, dedupe, sort ----
     cats <- sort(unique(c(exp_cats, fund_cats)))
 
     dr <- drag_order()
@@ -355,18 +364,18 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
 
-  ## EVENT: Manual Row Reordering ----
-  ### Temp order and proxy table ----
+  ## ---- EVENT: Manual Row Reordering ----
+  ### ---- Temp order and proxy table ----
   pending_order <- reactiveVal(NULL)
   proxy <- dataTableProxy("sample_manual_table")
 
-  ### Update temp order when user drags rows ----
+  ### ----Update temp order when user drags rows ----
   observeEvent(input$newOrder, {
     new_idx <- match(input$newOrder, values$expenses$priority)
     pending_order(values$expenses[new_idx, ])
   })
 
-  ### Save manual order ----
+  ### ---- Save manual order ----
   observeEvent(input$save_manual_order, {
     values$expenses <- row_reorder(
       input$newOrder,
@@ -378,30 +387,40 @@ main_server_logic <- function(input, output, session, values) {
     showNotification("Manual order saved", type = "message", duration = 3)
   })
 
-  ### Cancel manual order ----
+  ### ---- Cancel manual order ----
   observeEvent(input$cancel_manual_order, {
     if (is.null(pending_order())) {
-      showNotification("No manual order to cancel", type = "warning", duration = 3)
+      showNotification(
+        "No manual order to cancel",
+        type = "warning",
+        duration = 3
+      )
       return()
     }
     pending_order(NULL)
     showNotification("Manual order cancelled", type = "message", duration = 3)
   })
 
-  ### When leaving manual priority view, clear pending order ----
+  ### ---- When leaving manual priority view, clear pending order ----
   observeEvent(
     input$select_priority,
     {
-      if (!is.null(pending_order()) && input$select_priority != "Manual Priority") {
+      if (
+        !is.null(pending_order()) && input$select_priority != "Manual Priority"
+      ) {
         pending_order(NULL)
-        showNotification("Unsaved manual order discarded", type = "message", duration = 3)
+        showNotification(
+          "Unsaved manual order discarded",
+          type = "message",
+          duration = 3
+        )
       }
     },
     ignoreNULL = FALSE
   )
 
-  ## EVENT: Logic for column sorting ----
-  ### Dynamically generate the sorting rules list ----
+  ## ---- EVENT: Logic for column sorting ----
+  ### ---- Dynamically generate the sorting rules list ----
   current_ordering_rules <- reactive({
     # Ensure UI is initialized
     req(input$select_first_priority_item)
@@ -421,7 +440,7 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
-  ### Apply sorting when relevant inputs change ----
+  ### ---- Apply sorting when relevant inputs change ----
   observe({
     # Do not proceed if no data is loaded
     req(values$expenses)
@@ -454,7 +473,7 @@ main_server_logic <- function(input, output, session, values) {
       ignoreNULL = FALSE
     )
 
-  ## EVENT: Upload Expenses and Funding Data ----
+  ## ---- EVENT: Upload Expenses and Funding Data ----
   observeEvent(input$spreadsheet_upload, {
     req(input$spreadsheet_upload)
     path <- input$spreadsheet_upload$datapath
@@ -468,15 +487,23 @@ main_server_logic <- function(input, output, session, values) {
         values$funding_sources <- funding_sources_df
         values$expenses <- expense_df
 
-        showNotification("Data saved successfully", type = "message", duration = 3)
+        showNotification(
+          "Data saved successfully",
+          type = "message",
+          duration = 3
+        )
       },
       error = function(e) {
-        showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
+        showNotification(
+          paste("Upload failed:", e$message),
+          type = "error",
+          duration = 3
+        )
       }
     )
   })
 
-  ## OUTPUT: Manual Priority Data Table ----
+  ## ---- OUTPUT: Manual Priority Data Table ----
   output$sample_manual_table <- renderDT({
     if (!is.null(pending_order())) {
       df <- pending_order()
@@ -514,7 +541,7 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
-  ## EVENT: Activating Forecasting Button ----
+  ## ---- EVENT: Activating Forecasting Button ----
   observeEvent(input$generate_forecast, {
     tryCatch(
       {
@@ -529,17 +556,25 @@ main_server_logic <- function(input, output, session, values) {
         values$expense_status <- allocation_data$expenses
         values$full_budget_allocation_df <- allocation_data$full_allocation_data
 
-        showNotification("Allocation Finished. Go to Dashboard for result.", type = "message", duration = 3)
+        showNotification(
+          "Allocation Finished. Go to Dashboard for result.",
+          type = "message",
+          duration = 3
+        )
       },
       error = function(e) {
-        showNotification(paste("Allocation Failed:", e$message), type = "error", duration = 3)
+        showNotification(
+          paste("Allocation Failed:", e$message),
+          type = "error",
+          duration = 3
+        )
       }
     )
   })
 
-  # 4. FUNDING PAGE SERVER LOGIC ----
+  # ---- 4. FUNDING PAGE SERVER LOGIC ----
 
-  ## EVENT: Add Funding Button ----
+  ## ---- EVENT: Add Funding Button ----
   # Adding new funding form
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal(categories = available_categories()))
@@ -550,14 +585,14 @@ main_server_logic <- function(input, output, session, values) {
     removeModal()
   })
 
-  ## EVENT: Delete Funding Button ----
+  ## ---- EVENT: Delete Funding Button ----
   # Deleting selected funding
   observeEvent(input$delete_funding, {
     selected <- input$sample_funding_table_rows_selected
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
 
-  ## OUTPUT: Data Table ----
+  ## ---- OUTPUT: Data Table ----
   display_funding_names <- c(
     priority = "Priority",
     source_id = "Source ID",
@@ -608,9 +643,9 @@ main_server_logic <- function(input, output, session, values) {
     server = FALSE
   )
 
-  # 5. EXPENSE PAGE SERVER LOGIC ----
+  # ---- 5. EXPENSE PAGE SERVER LOGIC ----
 
-  ## EVENT: Add Expense Button ----
+  ## ---- EVENT: Add Expense Button ----
   # Adding new expense form
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal(categories = available_categories()))
@@ -621,14 +656,14 @@ main_server_logic <- function(input, output, session, values) {
     removeModal()
   })
 
-  ## EVENT: Delete Expense Button ----
+  ## ---- EVENT: Delete Expense Button ----
   # Deleting selected expense
   observeEvent(input$delete_expense, {
     selected <- input$sample_expense_table_rows_selected
     values$expenses <- delete_row(values$expenses, selected)
   })
 
-  ## OUTPUT: Data Table ----
+  ## ---- OUTPUT: Data Table ----
   display_expense_names <- c(
     priority = "Priority",
     expense_id = "Expense ID",
@@ -643,7 +678,7 @@ main_server_logic <- function(input, output, session, values) {
     {
       req(values$expenses)
       df <- values$expenses
-      
+
       # Format date for display
       df <- df %>%
         mutate(
