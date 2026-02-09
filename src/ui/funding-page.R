@@ -7,7 +7,6 @@ funding_ui <- function() {
     class = "result-container",
     
     div(
-      id = "funding-container",
       
       div(
         class = "input-title-container",
@@ -18,7 +17,7 @@ funding_ui <- function() {
           class = "content-title"
         ),
         div(
-          actionButton("add_funding", "+ Add Funding", class = "add_data_btn")
+          actionButton("add_funding", "+ Add Funding", class = "add-data-btn")
         )
       ),
       
@@ -56,7 +55,7 @@ upload_funding_modal <- function(categories) {
       footer = actionButton("add_funding_confirm", "Add Funding", class = "add-funding-confirm"),
       
       div(
-        id = "funding-form",
+        class = "funding-form",
         
         ## ---- 1. Funding Source Name ----
         div(
@@ -74,7 +73,7 @@ upload_funding_modal <- function(categories) {
         
         ## ---- 2. Funding Allowed Categories ----
         div(
-          id = "funding-allowed-categories",
+          class = "funding-allowed-categories",
           
           div("Allowed Categories", class = "data-input-headers"),
           
@@ -95,7 +94,7 @@ upload_funding_modal <- function(categories) {
         
         ## ---- 3. Validity Date ----
         div(
-          id = "date-container",
+          class = "date-container",
           
           div(
             class = "date-valid",

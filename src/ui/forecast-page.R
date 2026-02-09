@@ -14,13 +14,13 @@ forecast_ui <- function() {
         
         ## ---- 1. Upload Excel File Section ----
         card(
-          id = "upload-card",
+          class = "upload-card",
           
           div(
             p("Upload the Excel file", class = "card-title"),
             
             div(
-              id = "upload-container",
+              class = "upload-container",
               
               div(
                 id = "left-upload",
@@ -45,14 +45,14 @@ forecast_ui <- function() {
         
         ## ---- 2. Setting Expense Priority Section ----
         card(
-          id = "set-priority-card",
+          class = "set-priority-card",
           full_screen = TRUE,
           
           div(
             p("Set Priority", class = "card-title"),
             
             div(
-              class = "select_priority_input_type",
+              class = "select-priority-input-type",
               selectInput(
                 "select_priority",
                 label = NULL,
@@ -65,7 +65,7 @@ forecast_ui <- function() {
           style = "padding: 0; font-weight: normal;"
         )
       ),
-      actionButton("generate_forecast", "Generate Forecast", class = "generate_forecast_btn")
+      actionButton("generate_forecast", "Generate Forecast", class = "generate-forecast-btn")
     )
   )
 }
@@ -75,9 +75,20 @@ manual_priority_ui <- function() {
   # ---- Manual Expense Priority Section ----
   
   div(
-    DTOutput("sample_manual_table"),        
-    actionButton("save_manual_order", "Save order", class = "btn-primary"),
-    actionButton("cancel_manual_order", "Cancel", class = "btn-default"),
+    DTOutput("manual_table"),        
+    
+    conditionalPanel(
+      condition = "output.data_uploaded == true",
+      
+      div(
+        class = "manual-buttons",
+        
+        actionButton("save_manual_order", "Save order", class = "save-manual-btn"),
+        actionButton("cancel_manual_order", "Cancel", class = "cancel-manual-btn"),
+        downloadButton("download_excel", "Download Excel file", class = "excel-dl-btn-manual")
+      )
+    ),
+    
     style = "padding: 16px; font-weight: 400; font-size: 16px;"
   )
 }
@@ -89,7 +100,7 @@ column_priority_ui <- function() {
   div(
     
     div(
-      id = "priority-container",
+      class = "priority-container",
       
       ## ---- 1. First Priority Card ----
       div(
@@ -99,16 +110,15 @@ column_priority_ui <- function() {
           class = "card-style",
           
           div(
-            p("1st Priority", style = "margin-bottom: 5px; font-size: 16px;"),
+            p("1st Priority", style = "margin-bottom: 10px; font-size: 16px;"),
             
             div(
-              class = "select_priority_dropdown",
-              pickerInput( # selectInput
+              class = "select-priority-dropdown",
+              pickerInput(
                 "select_first_priority_item",
                 label = NULL,
                 choices = c("Payment Date", "Categories"),
                 options = list(style = "btn-outline-secondary")
-          
               )
             ),
             uiOutput("first_priority")
@@ -125,16 +135,14 @@ column_priority_ui <- function() {
           class = "card-style",
           
           div(
-            p("2nd Priority", style = "margin-bottom: 5px; font-size: 16px;"),
+            p("2nd Priority", style = "margin-bottom: 10px; font-size: 16px;"),
             
             div(
-              class = "select_priority_dropdown",
-              
-              pickerInput( # selectInput
+              class = "select-priority-dropdown",
+              pickerInput(
                 "select_second_priority_item",
                 label = NULL,
                 choices = c("Categories", "Payment Date", "None"),
-                # selected = "None",
                 options = list(style = "btn-outline-secondary")
               )
             ),
@@ -154,14 +162,15 @@ column_priority_ui <- function() {
       
       div(
         DTOutput("expense_table"),
+        
+        conditionalPanel(
+          condition = "output.data_uploaded == true",
+          
+          downloadButton("download_excel", "Download Excel file", class = "excel-dl-btn")
+        ),
+        
         style = "padding: 16px; font-weight: 400; font-size: 16px;"
       )
-      # ,
-      # div(
-      #   actionButton("save_column_order", "Save order", class = "btn-primary"),
-      #   actionButton("cancel_column_order", "Cancel", class = "btn-default"),
-      #   style = "padding: 0 16px 16px 16px;"
-      # )
     )
   )
 
@@ -242,8 +251,17 @@ none_priority_ui <- function() {
   
   div(
     p("No priority selected. Expenses' priority will be listed in this order.", 
-      style = "padding: 16px; font-weight: 400; font-size: 16px;"),
-    DTOutput("expense_table")
+      style = "padding: 16px; font-weight: 400; font-size: 16px; text-align: center"),
+    
+    DTOutput("expense_table"),
+    
+    conditionalPanel(
+      condition = "output.data_uploaded == true",
+      
+      downloadButton("download_excel", "Download Excel file", class = "excel-dl-btn")
+    ),
+    
+    style = "padding: 16px; font-weight: 400; font-size: 16px;"
   )
 }
 

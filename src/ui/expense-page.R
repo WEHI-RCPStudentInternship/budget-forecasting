@@ -7,7 +7,6 @@ expense_ui <- function() {
     class = "result-container",
     
     div(
-      id = "expense-container",
       
       div(
         class = "input-title-container",
@@ -18,7 +17,7 @@ expense_ui <- function() {
           class = "content-title"
         ),
         div(
-          actionButton("add_expense", "+ Add Expense", class = "add_data_btn")
+          actionButton("add_expense", "+ Add Expense", class = "add-data-btn")
         )
       ),
       
@@ -58,7 +57,7 @@ upload_expense_modal <- function(categories) {
       footer = actionButton("add_expense_confirm", "Add Expense", class = "add-expense-confirm"),
     
       div(
-        id = "expense-form",
+        class = "expense-form",
 
         ## ---- 1. Expense Name ----
         div(
@@ -75,7 +74,7 @@ upload_expense_modal <- function(categories) {
         
         ## ---- 2. Expense Categories ----
         div(
-          id = "expense-categories",
+          class = "expense-categories",
           
           div("Expense Categories", class = "data-input-headers"),
           

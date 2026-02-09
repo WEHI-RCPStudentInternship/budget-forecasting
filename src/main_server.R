@@ -95,7 +95,7 @@ main_server_logic <- function(input, output, session, values) {
     } else if (input$select_second_priority_item == "Categories") {
       categories_view(categories = available_categories())
     } else if (input$select_second_priority_item == "None") {
-      div("No second priority.", class = "no-second-priority")
+      div("No second priority.", style = "text-align: center; margin: 30px 0 20px 0;")
     }
   })
 
@@ -202,15 +202,22 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   ## ---- EVENT: Manual Row Reordering ----
+  
   ### ---- Temp order and proxy table ----
   pending_order <- reactiveVal(NULL)
-  proxy <- dataTableProxy("sample_manual_table")
+  proxy <- dataTableProxy("manual_table")
 
-  ### ----Update temp order when user drags rows ----
+  ### ---- Update temp order when user drags rows ----
   observeEvent(input$newOrder, {
     new_idx <- match(input$newOrder, values$expenses$priority)
     pending_order(values$expenses[new_idx, ])
   })
+  
+  ### ---- Data upload state for showing optional buttons ----
+  output$data_uploaded <- reactive({
+    !is.null(values$expenses) && nrow(values$expenses) > 0
+  })
+  outputOptions(output, "data_uploaded", suspendWhenHidden = FALSE)
 
   ### ---- Save manual order ----
   observeEvent(input$save_manual_order, {
@@ -220,6 +227,7 @@ main_server_logic <- function(input, output, session, values) {
       proxy,
       id_col = "priority"
     )
+    
     pending_order(NULL)
     showNotification("Manual order saved", type = "message", duration = 3)
   })
@@ -341,7 +349,7 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   ## ---- OUTPUT: Manual Priority Data Table ----
-  output$sample_manual_table <- renderDT({
+  output$manual_table <- renderDT({
     if (!is.null(pending_order())) {
       df <- pending_order()
     } else {
@@ -426,7 +434,8 @@ main_server_logic <- function(input, output, session, values) {
 
   ## ---- EVENT: Delete Funding Button ----
   observeEvent(input$delete_funding, {
-    selected <- input$sample_funding_table_rows_selected
+    selected <- input$funding_table_rows_selected
+    print(selected)
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
 
@@ -499,7 +508,7 @@ main_server_logic <- function(input, output, session, values) {
 
   ## ---- EVENT: Delete Expense Button ----
   observeEvent(input$delete_expense, {
-    selected <- input$sample_expense_table_rows_selected
+    selected <- input$expense_table_rows_selected
     values$expenses <- delete_row(values$expenses, selected)
   })
 

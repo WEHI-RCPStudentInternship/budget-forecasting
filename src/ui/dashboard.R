@@ -101,8 +101,8 @@ dashboard_ui <- function(total_balance) {
     ),
     
     ## ---- 4. Button Components ----
-    downloadButton("budget_download", "Download Budget Allocation", class = "budget_download_btn"),
-    actionButton("exit_session", "Exit Session", class = "exit_session_btn")
+    downloadButton("budget_download", "Download Budget Allocation", class = "budget-download-btn"),
+    actionButton("exit_session", "Exit Session", class = "exit-session-btn")
   )
   
 }

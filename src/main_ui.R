@@ -21,6 +21,7 @@ main_ui_layout <- function() {
       wght = c(400, 500, 600, 700, 800, 900)
       )
   )
+  useShinyjs()
   
   # Sidebar Layout
   main_platform <- page_sidebar(
