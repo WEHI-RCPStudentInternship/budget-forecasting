@@ -6,7 +6,7 @@ source("src/main_server.R")
 
 # ---- 1. Installing packages from requirements/packages.R ----
 
-run_setup()
+run_setup(force_source = TRUE)
 
 
 # ---- 2. Load packages ----
