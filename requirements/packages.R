@@ -1,19 +1,19 @@
 
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-REQUIRED_PACKAGES <- c("shiny", "bslib", "DT", "dplyr", "readxl", 
+REQUIRED_PACKAGES <- c("magrittr", "shiny", "bslib", "DT", "dplyr", "readxl", 
                        "openxlsx", "tidyr", "rmarkdown", "shinyWidgets", 
                        "sortable", "plotly", "htmlwidgets", "ompr",
                        "ompr.roi", "ROI", "ROI.plugin.highs",
-                       "lubridate", "remotes", "magrittr", "shinyjs")
+                       "lubridate", "remotes", "shinyjs")
 
-run_setup <- function(force_source = FALSE) {
+run_setup <- function() {
   
   # Identify which packages are not yet installed on the system
   new_packages <- REQUIRED_PACKAGES[!(REQUIRED_PACKAGES %in% installed.packages()[,"Package"])]
   
   # Install missing packages if any are found
-  if(length(new_packages)) install.packages(new_packages, type = if (force_source) "source" else "binary")
+  if(length(new_packages)) install.packages(new_packages)
   
   # Github packages from remotes (for chordDiag)
   if (!requireNamespace("chorddiag", quietly = TRUE)) {
