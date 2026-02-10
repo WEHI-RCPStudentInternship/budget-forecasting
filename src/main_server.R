@@ -12,7 +12,7 @@ main_server_logic <- function(input, output, session, values) {
   # ---- 1. GENERAL LOGIC ----
 
   ## ---- Current page ----
-  current_view <- reactiveVal("funding")
+  current_view <- reactiveVal("forecast")
 
   ## ---- Data Validation ----
   errors <- reactiveVal(NULL)

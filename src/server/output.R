@@ -58,8 +58,10 @@ input_excel_download <- function(values) {
   addWorksheet(wb, "Expense")
 
   # Temp dataframes for export
-  export_expenses <- values$expenses
-  export_funding <- values$funding_sources
+  export_expenses <- values$expenses %>%
+    select(priority, expense_name, expense_category, planned_amount, latest_payment_date, notes)
+  export_funding <- values$funding_sources %>%
+    select(funding_source, allowed_categories, valid_from, valid_to, amount, notes)
 
   # Rename columns and output data
   expense_name_map <- c(
