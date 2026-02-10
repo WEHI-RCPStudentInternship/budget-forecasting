@@ -34,7 +34,8 @@ expense_ui <- function() {
         class = "info-containers",
         style = "padding: 16px;"
       )
-    ),  
+    ) 
+  
   )
 }
 

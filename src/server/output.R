@@ -11,8 +11,8 @@ main_output <- function(input, output, session, values) {
   )
 
   # ---- HANDLER: Download the Excel file with current data ----
-  output$initial_download <- downloadHandler(
-    filename = function() "budget_data.xlsx",
+  output$download_excel <- downloadHandler(
+    filename = function() "current_budget_data.xlsx",
     content = function(file) {
       # Check if data is available
       if (!nrow(values$expenses) == 0 && !nrow(values$funding_sources) == 0) {
@@ -22,13 +22,6 @@ main_output <- function(input, output, session, values) {
         showNotification("No data available to download.", type = "error", duration = 5)
         saveWorkbook(create_budget_template_wb(), file, overwrite = TRUE)
       }
-    }
-  )
-  
-  output$download_excel <- downloadHandler(
-    filename = function() "current_budget_data.xlsx",
-    content = function(file) {
-      saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
     }
   )
 
@@ -201,6 +194,10 @@ create_allocation_report_wb <- function(values) {
   
   # ---- Data from values ----
   allocation_result <- values$full_budget_allocation_df
+  allocation_result <- allocation_result %>%
+    mutate(
+      latest_payment_date = format(as.Date(latest_payment_date), "%d-%m-%Y")
+    )
   funding_summary <- values$funding_summary
   funding_sources <- values$funding_sources
   expenses <- values$expenses
@@ -237,13 +234,13 @@ create_allocation_report_wb <- function(values) {
   ## ---- Data Output ----
   addStyle(wb, "Allocation Result", style = style_currency, 
            rows = (MAIN_SECTION_HEADER + 2):(MAIN_SECTION_HEADER + 1 + nrow(allocation_result)), 
-           cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL), gridExpand = TRUE)
+           cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL))
   writeData(wb, "Allocation Result", allocation_result, withFilter = TRUE, startRow = MAIN_SECTION_HEADER + 1, startCol = ITEM_LABEL_COL,
             headerStyle = style_header_border)
   
   if (ncol(allocation_result) > 0) {
     last_col <- ITEM_LABEL_COL + ncol(allocation_result) - 1
-    setColWidths(wb, "Allocation Result", cols = ITEM_LABEL_COL:last_col, widths = "auto")
+    setColWidths(wb, "Allocation Result", cols = ITEM_LABEL_COL + 1:last_col, widths = "auto")
   }
 
 
