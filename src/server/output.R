@@ -234,7 +234,7 @@ create_allocation_report_wb <- function(values) {
   ## ---- Data Output ----
   addStyle(wb, "Allocation Result", style = style_currency, 
            rows = (MAIN_SECTION_HEADER + 2):(MAIN_SECTION_HEADER + 1 + nrow(allocation_result)), 
-           cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL))
+           cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL), gridExpand = TRUE)
   writeData(wb, "Allocation Result", allocation_result, withFilter = TRUE, startRow = MAIN_SECTION_HEADER + 1, startCol = ITEM_LABEL_COL,
             headerStyle = style_header_border)
   
