@@ -601,6 +601,29 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   
+  #### ---- Validate allocation by month ----
+  allocation_by_month <- reactive({
+    
+    req(clicked_month())
+    cm <- clicked_month()
+    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+    
+    full_allocation <- values$full_budget_allocation_df
+    full_allocation <- full_allocation %>%
+      mutate(
+        allocation_date = if_else(
+          latest_payment_date >= valid_from & latest_payment_date <= valid_to,
+          latest_payment_date,
+          valid_from
+        )
+      ) %>%
+      filter(allocation_date < cutoff)
+    
+    nrow(full_allocation) > 0
+    
+  })
+  
+  
   #### ---- Allocation Chord Diagram ----
   output$circos_container <- renderUI({
     cm <- clicked_month()
@@ -618,6 +641,18 @@ main_server_logic <- function(input, output, session, values) {
     if (!all_shortfall()) {
       
       return (tags$p("No data available.", style = "font-size: 16px; text-align: center;"))
+      
+    }
+    
+    if (!allocation_by_month()) {
+      
+      return (
+        tagList(
+          tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
+                 style = "font-size: 16px; font-weight: 600;"),
+          tags$p("No allocation done this month.", style = "font-size: 16px; text-align: center;")
+        )
+      )
       
     }
     
@@ -671,7 +706,19 @@ main_server_logic <- function(input, output, session, values) {
   #### ---- Render budget allocation data table ----
   output$budget_allocation_table <- renderDT({
     req(values$full_budget_allocation_df)
-    df <- values$full_budget_allocation_df
+    df <- values$full_budget_allocation_df %>%
+      select(
+        source_id,
+        expense_id,
+        expense_category,
+        allocated_amount,
+        planned_amount,
+        latest_payment_date,
+        status
+      )
+    
+    print("allocation table")
+    print(df)
     
     colnames(df) <- display_budget_allocation_names[names(df)]
     

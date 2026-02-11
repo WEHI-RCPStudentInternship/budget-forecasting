@@ -87,7 +87,9 @@ server <- function(input, output, session) {
       allocated_amount = numeric(),
       planned_amount = numeric(),
       latest_payment_date = as.Date(character()),
-      status = character()
+      status = character(),
+      valid_from = as.Date(character()),
+      valid_to = as.Date(character())
     )
   )
   
