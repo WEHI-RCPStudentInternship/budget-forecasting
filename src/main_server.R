@@ -541,23 +541,22 @@ main_server_logic <- function(input, output, session, values) {
   ## ---- OUTPUT: Dashboard Information and Graphical Section ----
   
   ### ---- Data validation for dashboard output ----
-  all_shortfall <- reactive(
-    nrow(values$allocation_result) > 0 &&
-      nrow(values$funding_summary) > 0 &&
-      nrow(values$expense_status) > 0
+  all_input_data <- reactive(
+    nrow(values$funding_sources) > 0 &&
+      nrow(values$expenses) > 0
   )
   
   ### ---- SECTION 1: SHORTFALL ----
   
   #### ---- Activating and creating shortfall data ----
   shortfall_data <- reactive({
-    req(all_shortfall)
+    req(all_input_data)
     c <- create_shortfall_bar(values)
   })
 
   #### ---- 1. Shortfall Bar Graph ----
   output$shortfall_plot <- renderUI({
-    if (!all_shortfall()) {
+    if (!all_input_data()) {
       tags$p("No data available.", style = "font-size: 16px; text-align: center;")
     } else if (shortfall_data()$total_shortfalls == 0) {
       tags$p("No shortfall for this dataset.", style = "font-size: 16px; text-align: center;")
@@ -572,7 +571,7 @@ main_server_logic <- function(input, output, session, values) {
   
   #### ---- 2. Total Number of Shortfalls ----
   output$shortfall_number <- renderUI({
-    if (!all_shortfall()) {
+    if (!all_input_data()) {
       tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_shortfalls
@@ -581,7 +580,7 @@ main_server_logic <- function(input, output, session, values) {
   
   #### ---- 3. Total Funding Balance ----
   output$total_balance <- renderUI({
-    if (!all_shortfall()) {
+    if (!all_input_data()) {
       tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_balance
@@ -601,34 +600,11 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   
-  #### ---- Validate allocation by month ----
-  allocation_by_month <- reactive({
-    
-    req(clicked_month())
-    cm <- clicked_month()
-    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-    
-    full_allocation <- values$full_budget_allocation_df
-    full_allocation <- full_allocation %>%
-      mutate(
-        allocation_date = if_else(
-          latest_payment_date >= valid_from & latest_payment_date <= valid_to,
-          latest_payment_date,
-          valid_from
-        )
-      ) %>%
-      filter(allocation_date < cutoff)
-    
-    nrow(full_allocation) > 0
-    
-  })
-  
-  
   #### ---- Allocation Chord Diagram ----
   output$circos_container <- renderUI({
     cm <- clicked_month()
     
-    if (is.null(cm) && all_shortfall()) {
+    if (is.null(cm) && all_input_data()) {
       
       # Default circos plot using the last month of the allocation period
       expense_df <- values$expenses
@@ -638,23 +614,12 @@ main_server_logic <- function(input, output, session, values) {
       
     } 
     
-    if (!all_shortfall()) {
+    if (!all_input_data()) {
       
       return (tags$p("No data available.", style = "font-size: 16px; text-align: center;"))
       
     }
     
-    if (!allocation_by_month()) {
-      
-      return (
-        tagList(
-          tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
-                 style = "font-size: 16px; font-weight: 600;"),
-          tags$p("No allocation done this month.", style = "font-size: 16px; text-align: center;")
-        )
-      )
-      
-    }
     
     circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
     
@@ -699,7 +664,7 @@ main_server_logic <- function(input, output, session, values) {
     expense_category = "Expense Category",
     allocated_amount = "Allocated Amount",
     planned_amount = "Expense Amount",
-    latest_payment_date = "Payment Date",
+    latest_payment_date = "Latest Payment Date",
     status = "Allocation Status"
   )
   
@@ -717,15 +682,47 @@ main_server_logic <- function(input, output, session, values) {
         status
       )
     
-    print("allocation table")
-    print(df)
-    
     colnames(df) <- display_budget_allocation_names[names(df)]
     
     datatable(df)
   })
   
-  ### ---- 2. Unallocated Funding Section ----
+  ### ---- 2. Unallocated Expense Section ----
+  display_unallocated_expense_names <- c(
+    expense_id = "Expense ID",
+    expense_name = "Expense Name",
+    expense_category = "Expense Category",
+    planned_amount = "Expense Amount",
+    latest_payment_date = "Latest Payment Date",
+    notes = "Notes",
+    status = "Allocation Status"
+  )
+  
+  #### ---- Display unallocated expense data table headers ----
+  
+  #### ---- Render unallocated expense data table ----
+  output$unallocated_expense_table <- renderDT({
+    expense_status_df <- values$expense_status
+    
+    df <- expense_status_df %>%
+      filter(status == "Unfunded") %>%
+      select(
+        expense_id,
+        expense_name,
+        expense_category,
+        planned_amount,
+        latest_payment_date,
+        notes,
+        status
+      )
+
+    colnames(df) <- display_unallocated_expense_names[names(df)]
+    
+    datatable(df)
+  })
+  
+  
+  ### ---- 3. Unallocated Funding Section ----
   
   #### ---- Display unallocated funding data table headers ----
   display_unallocated_funding_names <- c(

@@ -52,11 +52,13 @@ create_shortfall_bar <- function(values) {
   
   ## ---- Step 2: Create An Empty Monthly Baseline Data Frame ----
   months <- seq(
-    from = min(floor_date(c(expenses$latest_payment_date, df$valid_from_month), "month")),
-    to = max(floor_date(c(df$valid_to_month, expenses$latest_payment_date), "month")),
+    from = min(floor_date(c(expenses$latest_payment_date, funding$valid_from), "month")),
+    to = max(floor_date(c(funding$valid_to, expenses$latest_payment_date), "month")),
     by = "1 month"
   )
   months_df <- tibble(Month = months)
+  print("months df")
+  print(months_df)
   
   
   ## ----- Step 3: Extracting All Distinct Expenses ----
@@ -97,15 +99,22 @@ create_shortfall_bar <- function(values) {
       is_overdue = is_short & (Month > expense_date_month)
     )
   
+  print("expenses month status")
+  print(expenses_month_status)
+  
   
   shortfall_num <- expenses_month_status %>%
     filter(is_short == TRUE)
   
   ### ---- 1. Total Number Of Expense Shortfalls ----
   total_shortfalls <- length(unique(shortfall_num$expense_id))
+  print("total shortfalls")
+  print(total_shortfalls)
   
   ### ---- 2. Total Funding Balance ----
   total_balance <- sum(funding$amount)
+  print("total balance")
+  print(total_balance)
   
   
   ## ---- Step 7: Final Monthly Shortfall Data Frame ----
@@ -126,6 +135,9 @@ create_shortfall_bar <- function(values) {
       number_overdue = replace_na(number_overdue, 0L)
     ) %>%
     arrange(Month)
+  
+  print("monthly shortfall")
+  print(monthly_shortfall)
   
   
   ## ---- Step 8: Shortfall Bar Graphs ----
@@ -258,12 +270,22 @@ create_circos_plot <- function(values, month) {
     )
   
   ordered_expenses <- expenses[order(expenses$expense_id),]
-  #print(funding)
   
-  sources_ids <- unique(funding$source_id)
+  print(month)
+  funding_valid_from <- funding %>%
+    filter(valid_from < month)
+  
+  print(funding_valid_from)
+  
+  if (nrow(funding_valid_from) > 0) {
+    sources_ids <- unique(funding_valid_from$source_id)
+  } else {
+    sources_ids <- NULL
+  }
+  
+  
   expenses_ids <- unique(ordered_expenses$expense_id)
   sectors <- c(sources_ids, expenses_ids)
-  #print(sectors)
   
   
   rows_until_month <- full_allocation_df %>%
@@ -275,89 +297,110 @@ create_circos_plot <- function(values, month) {
       )
     ) %>%
     filter(allocation_date < month)
-  # print("row until month")
-  # print(rows_until_month)
+  print("row until month")
+  print(rows_until_month)
   
   
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors
   colnames(mat) <- sectors
   
+
   
-  ## ---- Step 2: Direct Expense And Funding Allocations ----
-  for (i in 1:nrow(rows_until_month)) {
-    mat[rows_until_month$source_id[i], rows_until_month$expense_id[i]] <- rows_until_month$allocated_amount[i]
-    mat[rows_until_month$expense_id[i], rows_until_month$source_id[i]] <- rows_until_month$allocated_amount[i]
-  }
-  
-  ## ---- Step 3: Allocation Cases For Chord Diagram ----
-  
-  ### ---- Case 1: Partial leftover expenses at the current time ----
-  leftover_expenses <- rows_until_month %>%
-    group_by(expense_id) %>%
-    summarise(
-      expense_amount = first(expense_amount),
-      cumulative_allocation = sum(allocated_amount),
-      leftover_expense = expense_amount - cumulative_allocation,
-      .groups = "drop"
-    )
-  
-  ### ---- Case 2: Expenses not fully allocated ----
-  fully_unallocated_expense <- expenses %>%
-    anti_join(leftover_expenses, by = "expense_id") %>%
-    group_by(expense_id) %>%
-    summarise(
-      expense_amount = planned_amount,
-      cumulative_allocation = 0,
-      leftover_expense = planned_amount,
-      .groups = "drop"
-    )
-  
-  all_expenses_allocations <- bind_rows(leftover_expenses, fully_unallocated_expense)
-  
-  ### ---- Remaining Expense Allocations (Case 1 & 2) ----
-  for (i in 1:nrow(all_expenses_allocations)) {
-    mat[all_expenses_allocations$expense_id[i], all_expenses_allocations$expense_id[i]] <- all_expenses_allocations$leftover_expense[i]
+  if (nrow(rows_until_month) > 0) {
+    
+    ## ---- Step 2: Direct Expense And Funding Allocations ----
+    for (i in 1:nrow(rows_until_month)) {
+      mat[rows_until_month$source_id[i], rows_until_month$expense_id[i]] <- rows_until_month$allocated_amount[i]
+      mat[rows_until_month$expense_id[i], rows_until_month$source_id[i]] <- rows_until_month$allocated_amount[i]
+    }
+    
+    ## ---- Step 3: Allocation Cases For Chord Diagram ----
+    
+    ### ---- Case 1: Partial leftover expenses at the current time ----
+    leftover_expenses <- rows_until_month %>%
+      group_by(expense_id) %>%
+      summarise(
+        expense_amount = first(expense_amount),
+        cumulative_allocation = sum(allocated_amount),
+        leftover_expense = expense_amount - cumulative_allocation,
+        .groups = "drop"
+      )
+    
+    ### ---- Case 2: Expenses not fully allocated ----
+    fully_unallocated_expense <- expenses %>%
+      anti_join(leftover_expenses, by = "expense_id") %>%
+      group_by(expense_id) %>%
+      summarise(
+        expense_amount = planned_amount,
+        cumulative_allocation = 0,
+        leftover_expense = planned_amount,
+        .groups = "drop"
+      )
+    
+    all_expenses_allocations <- bind_rows(leftover_expenses, fully_unallocated_expense)
+    
+    ### ---- Remaining Expense Allocations (Case 1 & 2) ----
+    for (i in 1:nrow(all_expenses_allocations)) {
+      mat[all_expenses_allocations$expense_id[i], all_expenses_allocations$expense_id[i]] <- all_expenses_allocations$leftover_expense[i]
+    }
+    
+  } else {
+    
+    for (i in 1:nrow(expenses)) {
+      mat[expenses$expense_id[i], expenses$expense_id[i]] <- expenses$planned_amount[i]
+    }
+    
   }
   
   
   ## ---- Step 3: Funding Allocation Cases For Allocation Plot ----
   
-  # can be improved by only showing the funding when it becomes available
-  
-  ### ---- Case 1: Funding not fully allocated ----
-  unallocated_funding <- funding %>%
-    anti_join(rows_until_month, by = "source_id") %>%
-    reframe(
-      source_id,
-      remaining_amount = amount
-    )
-  
-  
-  ### ---- Case 2: Partial leftover funding at the current time ----
-  leftover_funding <- rows_until_month %>%
-    group_by(source_id) %>%
-    reframe(
-      funding_amount = first(amount),
-      cumulative_allocation = sum(allocated_amount),
-      remaining_amount = amount - cumulative_allocation,
-      .groups = "drop"
-    )
-  
-  all_funding_allocations <- bind_rows(unallocated_funding, leftover_funding)
-  all_funding_allocations <- all_funding_allocations %>%
-    reframe(
-      source_id,
-      remaining_amount
-    )
-  
-  ### ---- Remaining Funding Allocations (Case 1 & 2) ----
-  if (nrow(all_funding_allocations) > 0) {
-    for (i in 1:nrow(all_funding_allocations)) {
-      mat[all_funding_allocations$source_id[i], all_funding_allocations$source_id[i]] <- all_funding_allocations$remaining_amount[i]
+  if (nrow(rows_until_month) > 0) {
+    
+    ### ---- Case 1: Funding not fully allocated ----
+    unallocated_funding <- funding %>%
+      anti_join(rows_until_month, by = "source_id") %>%
+      reframe(
+        source_id,
+        remaining_amount = amount
+      )
+    
+    
+    ### ---- Case 2: Partial leftover funding at the current time ----
+    leftover_funding <- rows_until_month %>%
+      group_by(source_id) %>%
+      reframe(
+        funding_amount = first(amount),
+        cumulative_allocation = sum(allocated_amount),
+        remaining_amount = amount - cumulative_allocation,
+        .groups = "drop"
+      )
+    
+    all_funding_allocations <- bind_rows(unallocated_funding, leftover_funding)
+    all_funding_allocations <- all_funding_allocations %>%
+      reframe(
+        source_id,
+        remaining_amount
+      )
+    
+    ### ---- Remaining Funding Allocations (Case 1 & 2) ----
+    if (nrow(all_funding_allocations) > 0) {
+      for (i in 1:nrow(all_funding_allocations)) {
+        if (all_funding_allocations$source_id[i] %in% colnames(mat)) {
+          mat[all_funding_allocations$source_id[i], all_funding_allocations$source_id[i]] <- all_funding_allocations$remaining_amount[i]
+        }
+      }
     }
+    
+  } else if (nrow(funding_valid_from) > 0) {
+    
+      for (i in 1:nrow(funding_valid_from)) {
+        mat[funding_valid_from$source_id[i], funding_valid_from$source_id[i]] <- funding_valid_from$amount[i]
+      }
+    
   }
-  # print(mat)
+  
   
   
   funding_length <- length(sources_ids)
