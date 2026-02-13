@@ -47,7 +47,11 @@ create_shortfall_bar <- function(values) {
         expense_date >= valid_from & expense_date <= valid_to ~ "In Time",
         TRUE ~ "Overdue"
       )
-    )
+    ) %>%
+    arrange(expense_date)
+  
+  print("df")
+  print(df)
   
   
   ## ---- Step 2: Create An Empty Monthly Baseline Data Frame ----
@@ -81,12 +85,18 @@ create_shortfall_bar <- function(values) {
       .groups = "drop"
     )
   
+  print("funding by month")
+  print(funding_by_month)
+  
   
   ## ---- Step 5: Creating The Cartesian Product To Check Shortfall Every Month ---- 
   expense_month_grid <- all_expense %>%
     mutate(expense_date_month = floor_date(expense_date_month, "month")) %>%
     crossing(months_df) %>%
     filter(Month >= expense_date_month)
+  
+  print("expense_month_grid")
+  print(expense_month_grid)
   
   
   ## ---- Step 6: Cumulative Shortfalls For Each Expense Across All Months ----
@@ -100,7 +110,7 @@ create_shortfall_bar <- function(values) {
     )
   
   print("expenses month status")
-  print(expenses_month_status)
+  print(expenses_month_status, n = Inf)
   
   
   shortfall_num <- expenses_month_status %>%
@@ -276,7 +286,6 @@ create_circos_plot <- function(values, month) {
   funding_valid_from <- funding %>%
     filter(valid_from < month)
   
-  print(funding_valid_from)
   
   if (nrow(funding_valid_from) > 0) {
     sources_ids <- unique(funding_valid_from$source_id)

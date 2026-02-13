@@ -318,7 +318,8 @@ main_server_logic <- function(input, output, session, values) {
         showNotification(
           paste("Upload failed:", e$message),
           type = "error",
-          duration = 3
+          duration = 3,
+          ignoreInit = FALSE
         )
       }
     )
@@ -372,6 +373,8 @@ main_server_logic <- function(input, output, session, values) {
           values$funding_sources,
           values$expenses
         )
+        
+        req(allocation_data)
         values$allocation_result <- allocation_data$allocations
         values$funding_summary <- allocation_data$funds
         values$expense_status <- allocation_data$expenses
@@ -386,7 +389,7 @@ main_server_logic <- function(input, output, session, values) {
       },
       error = function(e) {
         showNotification(
-          paste("Allocation Failed:", e$message),
+          paste("Allocation Failed: No data input."),
           type = "error",
           duration = 3
         )
@@ -546,6 +549,13 @@ main_server_logic <- function(input, output, session, values) {
       nrow(values$expenses) > 0
   )
   
+  ### ---- Data validation for dashboard output ----
+  all_shortfall <- reactive(
+    nrow(values$allocation_result) > 0 &&
+      nrow(values$funding_summary) > 0 &&
+      nrow(values$expense_status) > 0
+  )
+  
   ### ---- SECTION 1: SHORTFALL ----
   
   #### ---- Activating and creating shortfall data ----
@@ -599,37 +609,29 @@ main_server_logic <- function(input, output, session, values) {
     clicked_month(clicked_bar$x)
   })
   
-  observeEvent(all_input_data(), {
-    
-    req(all_input_data())
-    
-    if (!is.null(clicked_month())) return ()
-      
-    # Default circos plot using the last month of the allocation period
-    expense_df <- values$expenses
-    funding_df <- values$funding_sources
-    default_month <- max(floor_date(c(expense_df$latest_payment_date, funding_df$valid_to), "month"))
-    clicked_month(default_month)
-    print("cm initial")
-    print(cm)
-      
-    
-  })
+
   
   
   #### ---- Allocation Chord Diagram ----
   output$circos_container <- renderUI({
+    cm <- clicked_month()
+
+    
+    if (is.null(cm) && all_input_data()) {
+      
+      # Default circos plot using the last month of the allocation period
+      expense_df <- values$expenses
+      funding_df <- values$funding_sources
+      default_month <- max(floor_date(c(expense_df$latest_payment_date, funding_df$valid_to), "month"))
+      cm <- clicked_month(default_month)
+      
+    } 
 
     if (!all_input_data()) {
 
-      return (tags$p("No data available.", style = "font-size: 16px; text-align: center;"))
+      return (tags$p("No data available.", style = "font-size: 16px; text-align: center; padding: 16px;"))
 
     }
-    
-    cm <- clicked_month()
-    
-    print("cm in change")
-    print(cm)
     
     # monthly_shortfall might be empty: create new month dataframe instead of monthly shortfall dataframe
     expenses <- values$expenses
@@ -650,15 +652,18 @@ main_server_logic <- function(input, output, session, values) {
     distinct_years <- months_df %>%
       distinct(year_date, year_chr)
     
-    print("cm in ui")
-    print(cm)
-    print(class(cm))
+    
+    cm_date <- as.Date(cm)
+    
+    circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
     
     # Configure sidebar for allocation months
     layout_sidebar(
       sidebar = sidebar(
-        "Allocation Month",
-        style = "height: 700px; overflow-y: auto; font-size: 15px;",
+        width = 250,
+        open = "always",
+        "Allocation By Month",
+        style = "height: 800px; overflow-y: auto; font-size: 15px; font-weight: 800; text-align: center;",
         
         accordion(
           open = distinct_years$year_chr,
@@ -691,16 +696,50 @@ main_server_logic <- function(input, output, session, values) {
           
         )
       ),
-      tagList(
-        tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
-               style = "font-size: 16px; font-weight: 600; padding: 15px;"),
-        chorddiagOutput("circos_plot", height = "600px", width = "100%")
-      )
       
+
+      tags$p(paste("Allocation Month: ", format(cm_date, "%b %Y")),
+             style = "font-size: 16px; font-weight: 600; padding: 15px 15px 5px 15px;"),
+      
+      output[[circos_plot_id]] <- renderChorddiag({
+        cm <- clicked_month()
+        req(cm)
+        
+        cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+        c <- create_circos_plot(values, month = cutoff)
+        
+        
+        # Activating zooming feature for circos plot
+        onRender(c, "
+        function(el, x) {
+          var svg = d3.select(el).select('svg');
+          var g = svg.select('g');
+          
+          if (d3.zoom) {
+            var zoom = d3.zoom()
+              .on('zoom', function() {
+                g.attr('transform', d3.event.transform);
+              });
+            
+            svg.call(zoom);
+          } else if (d3.behavior && d3.behavior.zoom) {
+            var zoom = d3.behavior.zoom()
+              .on('zoom', function() {
+                g.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
+              });
+  
+            svg.call(zoom);
+          } 
+      
+        }
+      ")
+        
+        
+      })
+
     )
     
   })
-  
   
   #### ---- Observe change in the month clicked ----
   observe({
@@ -728,31 +767,6 @@ main_server_logic <- function(input, output, session, values) {
     })
   })
   
-  
-  output$circos_plot <- renderChorddiag({
-    cm <- clicked_month()
-    req(cm)
-
-    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-    c <- create_circos_plot(values, month = cutoff)
-
-    # Activating zooming feature for circos plot
-    onRender(c, "
-      function(el, x) {
-        var svg = d3.select(el).select('svg');
-        var g = svg.select('g');
-
-
-        var zoom = d3.behavior.zoom()
-          .on('zoom', function() {
-            g.attr('transform', d3.event.transform);
-          })
-
-        svg.call(zoom);
-      }
-  ")
-
-  })
   
   ## ---- OUTPUT: Dashboard Result Tables ----
   
