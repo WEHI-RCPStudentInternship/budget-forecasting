@@ -1,4 +1,3 @@
-source("src/ui/forecast-page.R")
 source("src/server/components/allocation-algorithm.R")
 source("src/server/components/data-processing.R")
 source("src/server/components/output.R")

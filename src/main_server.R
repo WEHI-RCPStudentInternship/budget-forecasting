@@ -1,16 +1,14 @@
 
-source("src/server/dashboard.R")
-source("src/server/forecast-page.R")
-source("src/server/input-page.R")
-source("src/server/edit-page.R")
-
-
+source("src/server/dashboard-server.R")
+source("src/server/forecast-page-server.R")
+source("src/server/input-page-server.R")
+source("src/server/edit-page-server.R")
 
 main_server_logic <- function(input, output, session, values) {
   # ---- 1. GENERAL LOGIC ----
 
   ## ---- Current page ----
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("input")
 
   ## ---- Data Validation ----
   errors <- reactiveVal(NULL)

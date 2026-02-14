@@ -1,8 +1,8 @@
 
-source("src/ui/dashboard.R")
-source("src/ui/forecast-page.R")
-source("src/ui/edit-page.R")
-source("src/ui/input-page.R")
+source("src/ui/dashboard-ui.R")
+source("src/ui/forecast-page-ui.R")
+source("src/ui/edit-page-ui.R")
+source("src/ui/input-page-ui.R")
 
 main_ui_layout <- function() {
   #' Contains all UI components from ui folder

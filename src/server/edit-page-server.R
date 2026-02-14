@@ -1,4 +1,3 @@
-source("src/ui/edit-page.R")
 source("src/server/components/edit-rows.R")
 
 edit_server <- function(input, output, session, values, current_view) {

@@ -1,4 +1,3 @@
-source("src/ui/dashboard.R")
 source("src/server/components/graph.R")
 source("src/server/components/output.R")
 

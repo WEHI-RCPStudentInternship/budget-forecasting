@@ -1,4 +1,3 @@
-source("src/ui/input-page.R")
 source("src/server/components/data-processing.R")
 
 input_server <- function(input, output, session, values, current_view) {
@@ -16,19 +15,12 @@ input_server <- function(input, output, session, values, current_view) {
         values$funding_sources <- funding_sources_df
         values$expenses <- expense_df
 
-        showNotification(
-          "Data saved successfully",
-          type = "message",
-          duration = 3
-        )
+        showNotification("Data saved successfully", type = "message", duration = 3)
+
+        current_view("edit")
       },
       error = function(e) {
-        showNotification(
-          paste("Upload failed:", e$message),
-          type = "error",
-          duration = 3,
-          ignoreInit = FALSE
-        )
+        showNotification(paste("Upload failed:", e$message), type = "error", duration = 3, ignoreInit = FALSE)
       }
     )
   })
