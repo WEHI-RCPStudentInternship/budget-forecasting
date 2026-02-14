@@ -597,6 +597,7 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
   
+  
   ### ---- SECTION 2: ALLOCATION ----
   
   #### ---- Keep tracks of which bar in the bar graph is clicked ----
@@ -609,7 +610,6 @@ main_server_logic <- function(input, output, session, values) {
     clicked_month(clicked_bar$x)
   })
   
-
   
   
   #### ---- Allocation Chord Diagram ----
