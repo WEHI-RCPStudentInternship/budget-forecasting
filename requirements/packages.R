@@ -5,7 +5,7 @@ REQUIRED_PACKAGES <- c("magrittr", "shiny", "bslib", "DT", "dplyr", "readxl",
                        "openxlsx", "tidyr", "rmarkdown", "shinyWidgets", 
                        "sortable", "plotly", "htmlwidgets", "ompr",
                        "ompr.roi", "ROI", "ROI.plugin.highs",
-                       "lubridate", "remotes", "shinyjs")
+                       "lubridate", "remotes", "shinyjs", "jsonlite")
 
 run_setup <- function() {
   

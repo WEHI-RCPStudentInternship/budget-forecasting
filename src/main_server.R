@@ -633,7 +633,6 @@ main_server_logic <- function(input, output, session, values) {
 
     }
     
-    # monthly_shortfall might be empty: create new month dataframe instead of monthly shortfall dataframe
     expenses <- values$expenses
     funding <- values$funding_sources
     
@@ -657,7 +656,7 @@ main_server_logic <- function(input, output, session, values) {
     
     circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
     
-    # Configure sidebar for allocation months
+    # Sidebar for allocation navigation by month
     layout_sidebar(
       sidebar = sidebar(
         width = 250,
@@ -677,6 +676,7 @@ main_server_logic <- function(input, output, session, values) {
               filter(year_date == each_year_date)
             
             
+            # One accordion panel for each distinct year
             accordion_panel(
               title = each_year_chr,
               value = each_year_chr,
@@ -685,6 +685,7 @@ main_server_logic <- function(input, output, session, values) {
                 
                 month_id <- months_per_year$id[i]
                 
+                # All months within the year involved in allocation
                 actionButton(
                   inputId = paste0(month_id),
                   label = months_per_year$month[i],
@@ -706,33 +707,33 @@ main_server_logic <- function(input, output, session, values) {
         req(cm)
         
         cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-        c <- create_circos_plot(values, month = cutoff)
+        circos <- create_circos_plot(values, month = cutoff)
         
         
         # Activating zooming feature for circos plot
-        onRender(c, "
-        function(el, x) {
-          var svg = d3.select(el).select('svg');
-          var g = svg.select('g');
-          
-          if (d3.zoom) {
-            var zoom = d3.zoom()
-              .on('zoom', function() {
-                g.attr('transform', d3.event.transform);
-              });
+        onRender(circos, "
+          function(el, x) {
+            var svg = d3.select(el).select('svg');
+            var g = svg.select('g');
             
-            svg.call(zoom);
-          } else if (d3.behavior && d3.behavior.zoom) {
-            var zoom = d3.behavior.zoom()
-              .on('zoom', function() {
-                g.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
-              });
-  
-            svg.call(zoom);
-          } 
-      
-        }
-      ")
+            if (d3.zoom) {
+              var zoom = d3.zoom()
+                .on('zoom', function() {
+                  g.attr('transform', d3.event.transform);
+                });
+              
+              svg.call(zoom);
+            } else if (d3.behavior && d3.behavior.zoom) {
+              var zoom = d3.behavior.zoom()
+                .on('zoom', function() {
+                  g.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
+                });
+    
+              svg.call(zoom);
+            } 
+        
+          }
+        ")
         
         
       })

@@ -30,6 +30,7 @@ library(ROI)                # R Optimization Infrastructure (solver interface)
 library(ROI.plugin.highs)   # High performance software (highs) for linear optimisation
 library(magrittr)           # Forward-pipe operator (%>%) to construct functions
 library(shinyjs)            # Useful JS operations for Shiny
+library(jsonlite)           # For converting objects into JSON (for JavaScript)
 
 
 # ---- 3. Load UI ----

@@ -49,9 +49,7 @@ create_shortfall_bar <- function(values) {
       )
     ) %>%
     arrange(expense_date)
-  
-  print("df")
-  print(df)
+
   
   
   ## ---- Step 2: Create An Empty Monthly Baseline Data Frame ----
@@ -61,8 +59,6 @@ create_shortfall_bar <- function(values) {
     by = "1 month"
   )
   months_df <- tibble(Month = months)
-  print("months df")
-  print(months_df)
   
   
   ## ----- Step 3: Extracting All Distinct Expenses ----
@@ -85,9 +81,6 @@ create_shortfall_bar <- function(values) {
       .groups = "drop"
     )
   
-  print("funding by month")
-  print(funding_by_month)
-  
   
   ## ---- Step 5: Creating The Cartesian Product To Check Shortfall Every Month ---- 
   expense_month_grid <- all_expense %>%
@@ -95,8 +88,6 @@ create_shortfall_bar <- function(values) {
     crossing(months_df) %>%
     filter(Month >= expense_date_month)
   
-  print("expense_month_grid")
-  print(expense_month_grid)
   
   
   ## ---- Step 6: Cumulative Shortfalls For Each Expense Across All Months ----
@@ -109,22 +100,15 @@ create_shortfall_bar <- function(values) {
       is_overdue = is_short & (Month > expense_date_month)
     )
   
-  print("expenses month status")
-  print(expenses_month_status, n = Inf)
-  
   
   shortfall_num <- expenses_month_status %>%
     filter(is_short == TRUE)
   
   ### ---- 1. Total Number Of Expense Shortfalls ----
   total_shortfalls <- length(unique(shortfall_num$expense_id))
-  print("total shortfalls")
-  print(total_shortfalls)
   
   ### ---- 2. Total Funding Balance ----
   total_balance <- sum(funding$amount)
-  print("total balance")
-  print(total_balance)
   
   
   ## ---- Step 7: Final Monthly Shortfall Data Frame ----
@@ -145,9 +129,6 @@ create_shortfall_bar <- function(values) {
       number_overdue = replace_na(number_overdue, 0L)
     ) %>%
     arrange(Month)
-  
-  print("monthly shortfall")
-  print(monthly_shortfall)
   
   
   ## ---- Step 8: Shortfall Bar Graphs ----
@@ -252,11 +233,11 @@ create_circos_plot <- function(values, month) {
   #' @param month: Date object specifying the month up to which allocations are considered
   #'
   #' @return: chorddiag object representing the circos plot
-  
   df_allocations <- values$allocation_result
   funding <- values$funding_sources
   df_expenses_status <- values$expense_status
   expenses <- values$expenses
+
   
   ## ---- Step 1: Stage Full Allocation Data Frame ----
   allocation_with_funding_df <- df_allocations %>%
@@ -281,11 +262,10 @@ create_circos_plot <- function(values, month) {
         ), by = "expense_id"
     )
   
-  ordered_expenses <- expenses[order(expenses$expense_id),]
   
+  ### ---- 1. Controlling for funding when it becomes available ----
   funding_valid_from <- funding %>%
     filter(valid_from < month)
-  
   
   if (nrow(funding_valid_from) > 0) {
     sources_ids <- unique(funding_valid_from$source_id)
@@ -294,10 +274,12 @@ create_circos_plot <- function(values, month) {
   }
   
   
+  ordered_expenses <- expenses[order(expenses$expense_id),]
   expenses_ids <- unique(ordered_expenses$expense_id)
   sectors <- c(sources_ids, expenses_ids)
   
   
+  ### ---- 2. Filtering allocations done before a certain month ----
   rows_until_month <- full_allocation_df %>%
     mutate(
       allocation_date = if_else(
@@ -308,17 +290,18 @@ create_circos_plot <- function(values, month) {
     ) %>%
     filter(allocation_date < month)
 
-  
-  
+
+  # Main allocation matrix
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors
   colnames(mat) <- sectors
   
 
+  ## ---- Step 2: Direct Expense And Funding Allocations ----
   
   if (nrow(rows_until_month) > 0) {
     
-    ## ---- Step 2: Direct Expense And Funding Allocations ----
+
     for (i in 1:nrow(rows_until_month)) {
       mat[rows_until_month$source_id[i], rows_until_month$expense_id[i]] <- rows_until_month$allocated_amount[i]
       mat[rows_until_month$expense_id[i], rows_until_month$source_id[i]] <- rows_until_month$allocated_amount[i]
@@ -356,6 +339,7 @@ create_circos_plot <- function(values, month) {
     
   } else {
     
+    # Expenses Self-links (Fully Unallocated Expenses)
     for (i in 1:nrow(expenses)) {
       mat[expenses$expense_id[i], expenses$expense_id[i]] <- expenses$planned_amount[i]
     }
@@ -412,32 +396,136 @@ create_circos_plot <- function(values, month) {
   
   
   
+  ## ---- Step 4: Current Month Allocation Highlights ----
+  
+  ### ---- 1. Current Month Allocation Data Frame ----
+  month_before_current <- month - months(1)
+  
+  rows_before_current_month <- rows_until_month %>%
+    filter(allocation_date < month_before_current)
+
+  current_month_allocation <- setdiff(rows_until_month, rows_before_current_month)
+
+  
+  ### ---- 2. Current Month Allocation Matrix ----
+  current_month_mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
+  rownames(current_month_mat) <- sectors
+  colnames(current_month_mat) <- sectors
+  
+  if (nrow(current_month_allocation) > 0) {
+    for (i in 1:nrow(current_month_allocation)) {
+      current_month_mat[current_month_allocation$source_id[i], current_month_allocation$expense_id[i]] <- current_month_allocation$allocated_amount[i]
+      current_month_mat[current_month_allocation$expense_id[i], current_month_allocation$source_id[i]] <- current_month_allocation$allocated_amount[i]
+    }
+  }
+  
+  ### ---- 3. Extracting Current Month Allocations Into Vectors ----
+  data_id <- rownames(current_month_mat)
+  n <- length(data_id)
+  current_allocations <- c()
+  
+  for (i in 1:n) {
+    for (j in 1:n) {
+      if (current_month_mat[i, j] > 0) {
+        allocated <- paste0(data_id[i], "-", data_id[j])
+        current_allocations <- c(current_allocations, allocated)
+      }
+    }
+  }
+  
   funding_length <- length(sources_ids)
   expense_length <- length(expenses_ids)
   
+  ### ---- 4. Setting Two-tone Colours For Chord Diagram ----
+  funding_colors <- rep("green", funding_length)
+  expense_colors <- rep("red", expense_length)
+  all_colors <- c(funding_colors, expense_colors)
+
   
-  funding_colors <- rainbow(funding_length)
-  expense_colors <- heat.colors(expense_length)
-  sector_colors <- c(funding_colors, expense_colors)
+  ### ---- 5. Chord Diagram For Allocation Up Until Current Month ----
+  circos <- chorddiag(
+    data = mat,
+    chordedgeColor = "green",
+    groupColors = all_colors,
+    showTicks = FALSE,
+    margin = 80,
+    height = 800,
+    groupPadding = 5,
+    groupThickness = 0.1,
+    tooltipNames = sectors,
+    tooltipUnit = "$",
+    tooltipGroupConnector = " → "
+  )
   
-  ## ---- Step 4: Allocation Chord Diagram ----
-  c <- chorddiag(mat,
-                 groupColors = sector_colors,
-                 groupNames = sectors,
-                 groupThickness = 0.1,
-                 groupPadding = 5,
-                 groupnamePadding = 20,
-                 showTicks = FALSE,
-                 width = NULL,
-                 height = 800,
-                 margin = 80,
-                 tooltipNames = sectors,
-                 tooltipUnit = "$",
-                 tooltipGroupConnector = " → ",
-                 chordedgeColor = "#B3B6B7")
   
-  return (c)
+  ### ---- 6. Activating Highlights For Current Month Allocations and Shadows For Other Allocations ----
+  current_allocation_json <- toJSON(current_allocations)
+  circos <- onRender(circos, sprintf("
+      function(el, x) {
+        console.log('running');
+        setTimeout(function() {
+        
+          var currentAllocation = %s;
+          
+          /* Chord Colors */
+          d3.selectAll('.chords path').each(function() {
+            var path = d3.select(this);
+            var pathId = path.attr('id');
+            
+            if (pathId && pathId.startsWith('chord-')) {
+              var allocatedPart = pathId.replace('chord-', '');
+          
+              
+              var isCurrentMonth = currentAllocation.indexOf(allocatedPart) !== -1;
+              
+              if (isCurrentMonth) {
+                path.style('fill', 'rgba(76, 187, 23, 1)').style('fill-opacity', 1);
+              } else {
+                path.style('fill', 'rgba(107, 107, 107, 1)').style('fill-opacity', 0.2);
+              }
+            }
+          });
+          
+          
+          /* Group Arc Colors */
+          d3.selectAll('.groups path').each(function() {
+            var path = d3.select(this);
+            var archPathId = path.attr('id');
+            
+            if (archPathId && archPathId.startsWith('group-')) {
+              var allocatedPart = archPathId.replace('group-', '');
+              
+              var isCurrentMonth = currentAllocation.some(function(pair) {
+                return pair.startsWith(allocatedPart + '-') || pair.endsWith('-' + allocatedPart)
+              })
+              
+              
+              if (isCurrentMonth) {
+                path.style('fill', 'rgba(0, 78, 56, 1)')
+                  .style('fill-opacity', 1)
+                  .style('stroke', 'rgba(0, 78, 56, 1)');
+              } else {
+                path.style('fill', 'rgba(211, 211, 211, 1)').style('fill-opacity', 0.2);
+              }
+            }
+          });
+        
+        }, 10)
+        
+      }
+                     
+    ", current_allocation_json))
+  
+  
+  return (circos)
 }
+
+
+
+
+
+
+
 
 
 
