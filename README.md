@@ -81,34 +81,38 @@ The app accepts a Master Spreadsheet as input, processes the data, and generates
 #### 4.2.1 Directory Structure
 ```
 ├── README.md                             # Overview, setup and usage
-├── app.R                                 # App launcher 
+├── app.R                                 # App launcher
 ├── requirements/
-│   └── packages.R                        # Dependency checks / install helper (was requirements/packages.R)
+│   └── packages.R                        # Dependency checks / install helper
 ├── www/                                  # Static assets: images, css, js
+│   └── style.css                         # Custom styling
 └── src/
     ├── main_ui.R                         # Main UI layout and page wiring
     ├── main_server.R                     # Main server wiring (main_server_logic + module sourcing)
     ├── server/                           # Server-side modules (business logic)
-    │   ├── allocation-algorithm.R        # Allocation engine (optimizer + helpers)
-    │   ├── data-processing.R             # Read/clean Excel and validation routines
-    │   ├── edit-rows.R                   # CRUD helpers for funding & expense rows
-    │   ├── sorting.R                     # Sorting and reordering logic
-    │   ├── graph.R                       # Plot creation (shortfall, circos/chord)
-    │   └── output.R                      # Download handlers and Excel builders
+    │   ├── dashboard_server.R            # Dashboard page server logic
+    │   ├── forecast_page_server.R        # Forecast page server logic
+    │   ├── input_review_server.R         # Input review page server logic
+    │   └── components/                   # Reusable business logic components
+    │       ├── allocation_algorithm.R    # Allocation engine (optimizer + helpers)
+    │       ├── data_processing.R         # Read/clean Excel and validation routines
+    │       ├── edit_rows.R               # CRUD helpers for funding & expense rows
+    │       ├── sorting.R                 # Sorting and reordering logic
+    │       ├── graph.R                   # Plot creation (shortfall, circos/chord)
+    │       └── output.R                  # Download handlers and Excel builders
     └── ui/                               # UI component files
-        ├── forecast-page.R               # Forecast page UI and components
-        ├── funding-page.R                # Funding management UI (forms / tables)
-        ├── expense-page.R                # Expense management UI (forms / tables)
-        └── dashboard-page.R              # Dashboard page UI and components
+        ├── dashboard_ui.R                # Dashboard page UI and components
+        ├── forecast_page_ui.R            # Forecast page UI and components
+        └── input_review_ui.R             # Input review page UI and components
 ```
 
 #### 4.2.2 Module Structure Diagram
 
 The diagram below illustrates the structure and interaction of the various modules within the application. The modules sturcture as `module A ---> module B` indicates that `module A` calls function(s) in `module B`.
 
-![Module Structure Diagram](www/module-structure-diagram.png)
+![Module Structure Diagram](www/module_structure_diagram_v2.png)
 
-Diagram is updated as of 31/01/2025
+Diagram is updated as of 16/02/2025
 
 #### 4.2.3 Values Callouts
 
