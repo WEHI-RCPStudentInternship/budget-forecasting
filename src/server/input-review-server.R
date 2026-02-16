@@ -31,8 +31,7 @@ input_review_server <- function(input, output, session, values, current_view, av
         showNotification(
           paste("Upload failed:", e$message),
           type = "error",
-          duration = 3,
-          ignoreInit = FALSE
+          duration = 3
         )
       }
     )

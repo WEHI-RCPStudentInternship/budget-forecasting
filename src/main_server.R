@@ -27,9 +27,9 @@ main_server_logic <- function(input, output, session, values) {
   observe({
     for (error in errors()) {
       if (grepl("Warning", error)) {
-        showNotification(error, type = "warning", duration = NULL)
+        showNotification(error, type = "warning", duration = 3)
       } else {
-        showNotification(error, type = "error", duration = NULL)
+        showNotification(error, type = "error", duration = 3)
       }
     }
     errors(NULL)
