@@ -75,7 +75,7 @@ process_expense_data <- function(df) {
   #' - notes: Character
 
   expense_df <- df %>%
-    select(`Priority`, `Expense Name`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
+    select(`Priority`, `Expense Name`, `Expense Category`, `Planned Amount`, `Payment Date`, `Notes`) %>%
     setNames(nm = c("priority", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
 
     # Convert data types

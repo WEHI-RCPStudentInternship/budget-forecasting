@@ -79,7 +79,7 @@ input_excel_download <- function(values) {
     expense_name = "Expense Name",
     expense_category = "Expense Category",
     planned_amount = "Planned Amount",
-    latest_payment_date = "Latest Payment Date",
+    latest_payment_date = "Payment Date",
     notes = "Notes"
   )
   for (old_name in names(expense_name_map)) {
@@ -142,7 +142,7 @@ create_budget_template_wb <- function() {
       `Expense Name` = character(),
       `Expense Category` = character(),
       `Planned Amount` = numeric(),
-      `Latest Payment Date` = character(),
+      `Payment Date` = character(),
       `Notes` = character(),
       check.names = FALSE
     )
@@ -232,7 +232,7 @@ create_allocation_report_wb <- function(values) {
     expense_category = "Expense Category",
     allocated_amount = "Allocated Amount",
     planned_amount = "Expense Amount",
-    latest_payment_date = "Latest Payment Date",
+    latest_payment_date = "Payment Date",
     status = "Allocation Status"
   )
   
@@ -345,7 +345,7 @@ create_allocation_report_wb <- function(values) {
     expense_name = "Expense Name",
     expense_category = "Expense Category",
     planned_amount = "Planned Amount",
-    latest_payment_date = "Latest Payment Date",
+    latest_payment_date = "Payment Date",
     notes = "Notes"
   )
 

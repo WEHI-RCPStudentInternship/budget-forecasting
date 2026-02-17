@@ -138,7 +138,7 @@ input_review_server <- function(input, output, session, values, current_view, av
     expense_name = "Expense Name",
     expense_category = "Expense Category",
     planned_amount = "Planned Amount",
-    latest_payment_date = "Latest Payment Date",
+    latest_payment_date = "Payment Date",
     notes = "Notes"
   )
 

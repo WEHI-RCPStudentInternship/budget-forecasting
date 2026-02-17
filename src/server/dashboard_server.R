@@ -245,7 +245,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
     expense_category = "Expense Category",
     allocated_amount = "Allocated Amount",
     planned_amount = "Expense Amount",
-    latest_payment_date = "Latest Payment Date",
+    latest_payment_date = "Payment Date",
     status = "Allocation Status"
   )
 
@@ -274,7 +274,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
     expense_name = "Expense Name",
     expense_category = "Expense Category",
     planned_amount = "Expense Amount",
-    latest_payment_date = "Latest Payment Date",
+    latest_payment_date = "Payment Date",
     notes = "Notes",
     status = "Allocation Status"
   )
