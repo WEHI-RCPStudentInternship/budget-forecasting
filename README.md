@@ -20,9 +20,9 @@
 
 ## 1. Quick Links
 
-- Live Demo: [link]()
+- Live Demo: [link](https://wehieduau.sharepoint.com/:f:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/Summer%202025-2026/PRESENTATION%20AND%20FORMAL%20REPORTS/Demo%20Video?csf=1&web=1&e=khZeuK)
 - Fast Track report [link](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/2025%20Summer/Presentation%20and%20Formal%20Reports/Fast-track%20Report.docx?d=we00883216ea24fa7aa48c4a65b73be05&csf=1&web=1&e=cKiZhd)
-- Final Report powerpoint [link]()
+- Final Report powerpoint [link](https://wehieduau.sharepoint.com/:p:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/Summer%202025-2026/PRESENTATION%20AND%20FORMAL%20REPORTS/Forecasting%20Budget%20Summer%2025-26%20Final%20Presentation1.pptx?d=w78eb122ed4574714ad6ee22068fe082e&csf=1&web=1&e=6hV9sp)
 
 
 ---
@@ -44,10 +44,11 @@ You will need **R** (version 4.4.1) and **RStudio** installed on your machine.
     ``` bash
     git clone https://github.com/narolinelim/forecasting-with-workday-project.git
     ```
+    * If you're working on the forked version from Rowland, replace the URL with your forked repository URL.
 
 2.  **Run the app**
 
-    Open the `app.R` file in RStudio. There is no need to install any additional packages as all required packages are included in the code.
+    Open the `app.R` file in RStudio. There might be updates and changes to the packages used in the code, but there is no need for the user to manually install or update any packages as the code will automatically check for package requirements and install any missing packages when the app is launched.
 
     Click **Run App** or run:
 
@@ -111,6 +112,8 @@ The app accepts a Master Spreadsheet as input, processes the data, and generates
 The diagram below illustrates the structure and interaction of the various modules within the application. The modules sturcture as `module A ---> module B` indicates that `module A` calls function(s) in `module B`.
 
 ![Module Structure Diagram](www/module_structure_diagram_v2.png)
+
+* Link to `function_calls` documentation: [link](https://drive.google.com/file/d/1Te92fI6pUqYcI2P1Gx5USteNNj-qVOYJ/view?usp=sharing)
 
 Diagram is updated as of 16/02/2025
 
