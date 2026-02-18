@@ -317,7 +317,7 @@ forecast_server <- function(input, output, session, values, current_view, availa
       },
       error = function(e) {
         showNotification(
-          paste("Allocation Failed: No data input."),
+          paste("Allocation Failed: Incomplete data input."),
           type = "error",
           duration = 3
         )

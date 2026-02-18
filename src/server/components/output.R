@@ -15,7 +15,7 @@ main_output <- function(input, output, session, values) {
   output$download_sample_spreadsheet <- downloadHandler(
     filename = function() "filled_spreadsheet_template.xlsx",
     content = function(file) {
-      file_path <- "test/complex_test_case_1.xlsx"
+      file_path <- "test/complex_test_case.xlsx"
       file.copy(file_path, file)
     }
   )
